@@ -1,0 +1,19 @@
+{
+  "name": "exsit",
+  "version": "1.0.0",
+  "description": "peaceful exam seats distribution",
+  "scripts": {
+    "lint": "oxlint .",
+    "format": "oxfmt ."
+  },
+  "author": "nedoxff",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.8.1",
+  "devDependencies": {
+    "oxfmt": "^0.46.0",
+    "oxlint": "^1.61.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
