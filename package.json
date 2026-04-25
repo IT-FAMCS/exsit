@@ -4,12 +4,14 @@
   "description": "peaceful exam seats distribution",
   "scripts": {
     "lint": "oxlint .",
-    "format": "oxfmt ."
+    "format": "oxfmt .",
+    "dev": "concurrently --kill-others --handle-input --names server,client \"pnpm run --filter @exsit/server watch\" \"pnpm run --filter @exsit/client dev\""
   },
   "author": "nedoxff",
   "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.8.1",
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0"
   },
