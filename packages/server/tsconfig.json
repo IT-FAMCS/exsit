@@ -5,7 +5,7 @@
     "moduleResolution": "bundler",
     "lib": [
       "ESNext",
-      "dom"
+      "dom",
     ],
     "strict": true,
     "skipLibCheck": true,
@@ -21,6 +21,7 @@
         "../shared/src/*"
       ]
     },
+    "types": ["node"]
   },
   "include": [
     "src/**/*"
