@@ -7,10 +7,9 @@ type SchemaDataType<TOut extends AnyAPIResponseSchema> = Extract<
 	z.infer<TOut>,
 	{ data: unknown }
 >["data"];
-type SchemaErrorsType<TOut extends AnyAPIResponseSchema> = Extract<
-	z.infer<TOut>,
-	{ error: string }
->["error"];
+type SchemaErrorsType<TOut extends AnyAPIResponseSchema> = NonNullable<
+	Extract<z.infer<TOut>, { error: string }>["error"]
+>;
 
 export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 	result: ExpandedFetchResult<TOut>,
@@ -18,7 +17,7 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 		onSuccess?: (data: SchemaDataType<TOut>) => void;
 		onError?: (code: SchemaErrorsType<TOut>) => void;
 		showToast?: boolean;
-		errorMessages?: Record<SchemaErrorsType<TOut>, string>;
+		errorMessages?: Record<Exclude<SchemaErrorsType<TOut>, "validation" | "internal">, string>;
 	},
 ) => {
 	if (result.ok) {
@@ -42,7 +41,15 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 			return;
 		case "api":
 			if ((options.showToast ?? true) && options.errorMessages)
-				toast.danger(options.errorMessages[result.code]);
+				toast.danger(
+					(
+						{
+							...options.errorMessages,
+							validation: "Ошибка валидации данных",
+							internal: "На сервере произошла ошибка",
+						} as Record<SchemaErrorsType<TOut>, string>
+					)[result.code],
+				);
 			options.onError?.(result.code);
 			return;
 	}
@@ -100,7 +107,7 @@ export const expandedFetch = async <TOut extends AnyAPIResponseSchema>(
 	const parseResult = options.output.safeParse(json);
 	if (!parseResult.success)
 		return { ok: false, error: "malformed_response", parseErrors: parseResult.error, meta };
-	if (parseResult.data.error !== undefined)
+	if (parseResult.data.error !== null)
 		return { ok: false, error: "api", code: parseResult.data.error, meta };
 	return { ok: true, data: parseResult.data.data, meta };
 };

@@ -13,7 +13,9 @@ export const router = createBrowserRouter([
 		element: <LoginRoute />,
 	},
 ]);
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+	defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 0, retry: false } },
+});
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>

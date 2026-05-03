@@ -7,7 +7,8 @@ import cors from "@elysia/cors";
 new Elysia({ adapter: node() })
 	.mapResponse(({ responseValue, set }) => {
 		if (responseValue && typeof responseValue === "object" && "error" in responseValue)
-			set.status = responseValue.error === "unknown" ? 500 : 400;
+			set.status =
+				responseValue.error === "unknown" || responseValue.error === "internal" ? 500 : 400;
 	})
 	.use(cors({ origin: process.env.FRONTEND_HOSTNAME ? process.env.FRONTEND_HOSTNAME : true }))
 	.use(auth)

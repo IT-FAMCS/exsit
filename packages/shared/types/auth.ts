@@ -8,4 +8,13 @@ export const VerifyGroupCodeResponse = createApiResponseSchema(
 	z.enum(["invalidGroupCode"]),
 );
 
-export const LoginResponse = createApiResponseSchema(z.undefined(), z.enum(["invalidCredentials"]));
+export const LoginResponse = createApiResponseSchema(
+	z.null(),
+	z.enum(["internal", "invalidCredentials", "invalidGroupCode"]),
+);
+
+export const LoginRequest = z.object({
+	groupCode: z.string(),
+	studentId: z.string(),
+	password: z.string(),
+});

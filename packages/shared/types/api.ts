@@ -9,7 +9,7 @@ export const createApiResponseSchema = <
 ) =>
 	z.discriminatedUnion("error", [
 		z.object({
-			error: z.undefined().optional(),
+			error: z.null(),
 			data: dataSchema,
 		}),
 
@@ -24,3 +24,4 @@ export const createApiResponseSchema = <
 		}),
 	]);
 export type AnyAPIResponseSchema = ReturnType<typeof createApiResponseSchema>;
+export const ok = <T>(data: T) => ({ error: null, data }) as const;
