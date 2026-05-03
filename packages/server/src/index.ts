@@ -1,11 +1,16 @@
 import "dotenv/config";
 import { Elysia } from "elysia";
 import { node } from "@elysiajs/node";
-import { drizzle } from "drizzle-orm/libsql";
+import { auth } from "./routers/auth";
+import cors from "@elysia/cors";
 
-const db = drizzle(process.env.DB_FILE_NAME!);
-const app = new Elysia({ adapter: node() })
-	.get("/", () => "Hello Elysia")
-	.listen(3000, ({ hostname, port }) => {
+new Elysia({ adapter: node() })
+	.mapResponse(({ responseValue, set }) => {
+		if (responseValue && typeof responseValue === "object" && "error" in responseValue)
+			set.status = responseValue.error === "unknown" ? 500 : 400;
+	})
+	.use(cors({ origin: process.env.FRONTEND_HOSTNAME ? process.env.FRONTEND_HOSTNAME : true }))
+	.use(auth)
+	.listen(process.env.PORT, ({ hostname, port }) => {
 		console.log(`server running at ${hostname}:${port}`);
 	});

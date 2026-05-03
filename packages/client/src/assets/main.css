@@ -1,2 +1,7 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+
+@import "./themes/blue.css" layer(theme);
+@import "./themes/pink.css" layer(theme);
+@import "./themes/green.css" layer(theme);
+@import "./themes/yellow.css" layer(theme);
