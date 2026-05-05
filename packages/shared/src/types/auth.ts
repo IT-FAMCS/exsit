@@ -14,7 +14,7 @@ export const LoginResponse = createApiResponseSchema(
 );
 
 export const LoginRequest = z.object({
-	groupCode: z.string(),
-	studentId: z.string(),
+	groupCode: z.string().optional(),
+	id: z.string(),
 	password: z.string(),
 });

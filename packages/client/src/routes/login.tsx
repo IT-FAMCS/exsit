@@ -12,16 +12,12 @@ import {
 	Select,
 	Spinner,
 	TextField,
-	useTheme,
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { LoginRequest, LoginResponse, VerifyGroupCodeResponse } from "@exsit/shared/types/auth";
 
 export default function LoginRoute() {
-	const { setTheme } = useTheme();
-	useEffect(() => setTheme("yellow-light"), []);
-
 	const [groupCode, setGroupCode] = useState("");
 	const [students, setStudents] = useState<Record<string, string> | undefined>(undefined);
 	const [id, setId] = useState("");
@@ -42,7 +38,7 @@ export default function LoginRoute() {
 		queryFn: async () =>
 			await expandedFetch("/login", {
 				output: LoginResponse,
-				jsonBody: LoginRequest.encode({ groupCode, studentId: id, password }),
+				jsonBody: LoginRequest.encode({ groupCode, id, password }),
 				method: "POST",
 			}),
 		enabled: !!groupCode && !!id && !!password,

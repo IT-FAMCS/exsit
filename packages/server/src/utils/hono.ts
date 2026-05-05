@@ -15,7 +15,7 @@ export const zValidator = <T extends z.ZodSchema, Target extends keyof Validatio
 				res: new Response(
 					JSON.stringify({
 						error: "validation",
-						details: z.flattenError(result.error),
+						details: z.treeifyError(result.error),
 					} satisfies z.infer<AnyAPIResponseSchema>),
 				),
 			});

@@ -22,7 +22,7 @@ export const auth = new Hono<{ Variables: JwtVariables }>()
 		const result = await tryLoginStudent(request);
 		if (!result.error) {
 			const token = await sign(
-				{ id: request.studentId },
+				{ id: request.id },
 				process.env.JWT_SECRET ?? "someone forgot to set process.env.JWT_SECRET",
 				"HS256",
 			);

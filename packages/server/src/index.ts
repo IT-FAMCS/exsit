@@ -27,12 +27,13 @@ const app = new Hono()
 		"*",
 		cors({
 			origin: process.env.FRONTEND_HOSTNAME ?? "*",
+			credentials: true,
 		}),
 	)
 	.use(
 		"*",
 		except(
-			["/login", "/verify-group-code"],
+			["/", "/login", "/verify-group-code"],
 			jwt({
 				alg: "HS256",
 				secret: process.env.JWT_SECRET ?? "someone forgot to set process.env.JWT_SECRET",
@@ -41,9 +42,9 @@ const app = new Hono()
 		),
 	);
 
-app.get("/", (c) => c.text("meow"));
+app.get("/", (c) => c.text("meow!"));
 app.route("/", auth);
-app.route("/priveledged", admin);
+app.route("/admin", admin);
 
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);
