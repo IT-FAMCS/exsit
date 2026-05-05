@@ -10,7 +10,7 @@ export const VerifyGroupCodeResponse = createApiResponseSchema(
 
 export const LoginResponse = createApiResponseSchema(
 	z.null(),
-	z.enum(["internal", "invalidCredentials", "invalidGroupCode"]),
+	z.enum(["invalidCredentials", "invalidGroupCode"]),
 );
 
 export const LoginRequest = z.object({

@@ -1,17 +1,50 @@
 import "dotenv/config";
-import { Elysia } from "elysia";
-import { node } from "@elysiajs/node";
 import { auth } from "./routers/auth";
-import cors from "@elysia/cors";
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import { logger } from "hono/logger";
+import { cors } from "hono/cors";
+import { except } from "hono/combine";
+import { jwt } from "hono/jwt";
+import { admin } from "./routers/admin";
 
-new Elysia({ adapter: node() })
-	.mapResponse(({ responseValue, set }) => {
-		if (responseValue && typeof responseValue === "object" && "error" in responseValue)
-			set.status =
-				responseValue.error === "unknown" || responseValue.error === "internal" ? 500 : 400;
+const app = new Hono()
+	.use(logger())
+	.use("*", async (c, next) => {
+		await next();
+		if (c.res.headers.get("content-type")?.includes("application/json")) {
+			const cloned = c.res.clone();
+			const body = await cloned.json();
+			if (body && typeof body === "object" && "error" in body && body.error !== null) {
+				c.res = new Response(c.res.body, {
+					status: ["unknown", "internal"].includes(body.error) ? 500 : 400,
+					headers: c.res.headers,
+				});
+			}
+		}
 	})
-	.use(cors({ origin: process.env.FRONTEND_HOSTNAME ? process.env.FRONTEND_HOSTNAME : true }))
-	.use(auth)
-	.listen(process.env.PORT, ({ hostname, port }) => {
-		console.log(`server running at ${hostname}:${port}`);
-	});
+	.use(
+		"*",
+		cors({
+			origin: process.env.FRONTEND_HOSTNAME ?? "*",
+		}),
+	)
+	.use(
+		"*",
+		except(
+			["/login", "/verify-group-code"],
+			jwt({
+				alg: "HS256",
+				secret: process.env.JWT_SECRET ?? "someone forgot to set process.env.JWT_SECRET",
+				cookie: "auth",
+			}),
+		),
+	);
+
+app.get("/", (c) => c.text("meow"));
+app.route("/", auth);
+app.route("/priveledged", admin);
+
+serve(app, (info) => {
+	console.log(`server running at ${info.address}:${info.port}`);
+});

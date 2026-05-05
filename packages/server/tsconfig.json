@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "esnext",
+    "module": "esnext",
     "moduleResolution": "bundler",
     "lib": [
       "ESNext",
@@ -17,16 +17,17 @@
       "@/*": [
         "./src/*"
       ],
-      "@shared/*": [
-        "../shared/src/*"
-      ]
+      "@exsit/shared/*": ["../shared/src/*"]
     },
     "types": ["node"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
   ],
   "exclude": [
     "node_modules"
   ],
+  "references": [
+    {"path": "../shared"}
+  ]
 }

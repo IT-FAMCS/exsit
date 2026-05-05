@@ -4,12 +4,15 @@
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"outDir": "./dist",
-		"declaration": true,
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"rootDir": "src"
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules"],
 }

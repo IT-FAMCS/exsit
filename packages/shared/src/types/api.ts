@@ -14,8 +14,13 @@ export const createApiResponseSchema = <
 		}),
 
 		z.object({
+			error: z.literal("internal"),
+			details: z.unknown().optional(),
+		}),
+
+		z.object({
 			error: z.literal("validation"),
-			details: z.instanceof(z.ZodError),
+			details: z.object().optional(),
 		}),
 
 		z.object({
