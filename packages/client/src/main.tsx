@@ -3,14 +3,25 @@ import { createRoot } from "react-dom/client";
 import "./assets/main.css";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
-import LoginRoute from "./routes/login";
+import LoginRoute from "./routes/auth/login";
 import { QueryClient } from "@tanstack/react-query";
 import Provider from "./provider";
+import AuthProvider from "./routes/auth/root";
+import AdminRoute from "./routes/admin";
 
 export const router = createBrowserRouter([
 	{
-		path: "/login",
-		element: <LoginRoute />,
+		element: <AuthProvider />,
+		children: [
+			{
+				path: "/login",
+				element: <LoginRoute />,
+			},
+			{
+				path: "/admin",
+				element: <AdminRoute />,
+			},
+		],
 	},
 ]);
 export const queryClient = new QueryClient({

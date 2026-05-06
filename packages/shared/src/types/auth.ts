@@ -14,7 +14,26 @@ export const LoginResponse = createApiResponseSchema(
 );
 
 export const LoginRequest = z.object({
-	groupCode: z.string().optional(),
+	groupCode: z.string(),
 	id: z.string(),
 	password: z.string(),
 });
+
+export const Group = z.object({
+	code: z.string(),
+	course: z.number(),
+	num: z.number(),
+	department: z.string().nullable(),
+});
+
+export const Student = z.object({
+	id: z.string(),
+	fullName: z.string(),
+	informalFirstName: z.string(),
+	group: Group,
+});
+
+export type GroupType = z.infer<typeof Group>;
+export type StudentType = z.infer<typeof Student>;
+
+export const MeResponse = createApiResponseSchema(Student, z.enum(["invalidID", "invalidGroupCode"]));

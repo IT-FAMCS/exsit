@@ -5,9 +5,10 @@ import { groups } from "../schema/users";
 import { eq } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
 
-export const groupExists = async (code: string) => {
+export const groupExists = async (code: string) => !!(await getGroupById(code));
+export const getGroupById = async (code: string) => {
 	const [group] = await db.select().from(groups).where(eq(groups.code, code)).limit(1);
-	return !!group;
+	return group;
 };
 
 export const createGroup = async (

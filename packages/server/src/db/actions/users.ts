@@ -1,23 +1,27 @@
 import { db } from "../connection";
 import { z } from "zod";
-import { LoginResponse, LoginRequest, VerifyGroupCodeResponse } from "@exsit/shared/types/auth";
+import {
+	LoginResponse,
+	LoginRequest,
+	VerifyGroupCodeResponse,
+	MeResponse,
+} from "@exsit/shared/types/auth";
 import { students } from "../schema/users";
 import { eq } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
 import * as argon2 from "argon2";
-import { groupExists } from "./groups";
+import { getGroupById, groupExists } from "./groups";
 import { AddStudentsToGroupRequest, AddStudentsToGroupResponse } from "@exsit/shared/types/admin";
 import { v7 } from "uuid";
 
 export const tryLoginStudent = async (
 	req: z.infer<typeof LoginRequest>,
 ): Promise<z.input<typeof LoginResponse>> => {
-	if (req.id === "admin")
+	if (req.id === "admin" && req.groupCode === "secret")
 		return req.password === (process.env.ADMIN_PASSWORD ?? "")
 			? ok(null)
 			: { error: "invalidCredentials" };
 
-	if (!req.groupCode) return { error: "invalidGroupCode" };
 	const studentsInGroup = await getStudentsByGroupCode(req.groupCode);
 	if (studentsInGroup.error || !(req.id in studentsInGroup.data.students))
 		return { error: "invalidGroupCode" };
@@ -39,6 +43,7 @@ export const getStudentById = async (id: string): Promise<DatabaseStudent | unde
 export const getStudentsByGroupCode = async (
 	code: string,
 ): Promise<z.input<typeof VerifyGroupCodeResponse>> => {
+	if (code === "secret") return ok({ students: { admin: "Администратор" } });
 	if (!(await groupExists(code))) return { error: "invalidGroupCode" };
 
 	const matchingStudents = await db
@@ -67,4 +72,22 @@ export const addStudentsToGroup = async (
 	);
 	await db.insert(students).values(dbStudents);
 	return ok(null);
+};
+
+export const getFullStudent = async (id: string): Promise<z.infer<typeof MeResponse>> => {
+	const student = await getStudentById(id);
+	if (!student) return { error: "invalidID" };
+	const group = await getGroupById(student.group);
+	if (!group) return { error: "invalidGroupCode" };
+	return ok({
+		id: student.id,
+		fullName: student.fullName,
+		informalFirstName: student.informalFirstName,
+		group: {
+			code: group.code,
+			course: Number(group.course),
+			num: Number(group.num),
+			department: group.department,
+		},
+	});
 };

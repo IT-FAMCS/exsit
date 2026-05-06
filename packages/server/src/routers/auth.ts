@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { LoginRequest } from "@exsit/shared/types/auth";
-import { getStudentsByGroupCode, tryLoginStudent } from "@/db/actions/users";
+import { getFullStudent, getStudentsByGroupCode, tryLoginStudent } from "@/db/actions/users";
 import { Hono } from "hono";
 import { sign, type JwtVariables } from "hono/jwt";
 import { zValidator } from "@/utils/hono";
@@ -35,4 +35,8 @@ export const auth = new Hono<{ Variables: JwtVariables }>()
 			});
 		}
 		return c.json(result);
+	})
+	.get("/me", async (c) => {
+		const payload = c.get("jwtPayload") as { id: string };
+		return c.json(await getFullStudent(payload.id));
 	});
