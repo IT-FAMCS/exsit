@@ -47,7 +47,7 @@ export default function LoginRoute() {
 	useEffect(() => {
 		if (groupCodeFetch.data)
 			defaultHandler(groupCodeFetch.data, {
-				onSuccess: ({ students }) => setStudents(students),
+				onSuccess: ({ users: students }) => setStudents(students),
 				errorMessages: {
 					invalidGroupCode: "Неверный код группы",
 				},

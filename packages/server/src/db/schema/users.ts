@@ -22,3 +22,9 @@ export const students = s.sqliteTable("students", {
 		.references(() => groups.code),
 	passwordHash: s.text().notNull(),
 });
+
+export const admins = s.sqliteTable("admins", {
+	id: s.text().primaryKey(),
+	name: s.text().notNull(),
+	passwordHash: s.text().notNull(),
+});

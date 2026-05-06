@@ -1,14 +1,18 @@
 import { zValidator } from "@/utils/hono";
 import { Hono } from "hono";
 import { JwtVariables } from "hono/jwt";
-import { AddStudentsToGroupRequest, CreateGroupRequest } from "@exsit/shared/types/admin";
+import {
+	AddStudentsToGroupRequest,
+	CreateAdminRequest,
+	CreateGroupRequest,
+} from "@exsit/shared/types/admin";
 import { createGroup } from "@/db/actions/groups";
-import { addStudentsToGroup } from "@/db/actions/users";
+import { addStudentsToGroup, createAdmin } from "@/db/actions/users";
 
 export const admin = new Hono<{ Variables: JwtVariables }>()
 	.use("*", async (c, next) => {
 		const payload = c.get("jwtPayload");
-		if (payload && typeof payload === "object" && "id" in payload && payload.id === "admin") {
+		if (payload && typeof payload === "object" && "role" in payload && payload.role === "admin") {
 			await next();
 			return;
 		}
@@ -19,4 +23,7 @@ export const admin = new Hono<{ Variables: JwtVariables }>()
 	)
 	.patch("/group/:code/add-students", zValidator("json", AddStudentsToGroupRequest), async (c) =>
 		c.json(await addStudentsToGroup(c.req.param("code"), c.req.valid("json"))),
+	)
+	.post("/create", zValidator("json", CreateAdminRequest), async (c) =>
+		c.json(await createAdmin(c.req.valid("json"))),
 	);

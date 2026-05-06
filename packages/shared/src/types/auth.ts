@@ -3,13 +3,13 @@ import { z } from "zod";
 
 export const VerifyGroupCodeResponse = createApiResponseSchema(
 	z.object({
-		students: z.record(z.string(), z.string()),
+		users: z.record(z.string(), z.string()),
 	}),
 	z.enum(["invalidGroupCode"]),
 );
 
 export const LoginResponse = createApiResponseSchema(
-	z.null(),
+	z.enum(["student", "admin"]),
 	z.enum(["invalidCredentials", "invalidGroupCode"]),
 );
 
@@ -33,7 +33,24 @@ export const Student = z.object({
 	group: Group,
 });
 
+export const Admin = z.object({
+	id: z.string(),
+	name: z.string(),
+});
+
 export type GroupType = z.infer<typeof Group>;
 export type StudentType = z.infer<typeof Student>;
+export type AdminType = z.infer<typeof Admin>;
 
-export const MeResponse = createApiResponseSchema(Student, z.enum(["invalidID", "invalidGroupCode"]));
+export const MeResponse = createApiResponseSchema(
+	z.discriminatedUnion("role", [
+		z
+			.object({
+				role: z.literal("student"),
+			})
+			.extend(Student.shape),
+		z.object({ role: z.literal("admin") }).extend(Admin.shape),
+	]),
+	z.enum(["invalidID", "invalidGroupCode"]),
+);
+export type AuthInformation = Extract<z.infer<typeof MeResponse>, { error: null }>["data"];

@@ -89,9 +89,9 @@ export const expandedFetch = async <TOut extends AnyAPIResponseSchema>(
 				...options,
 				body: JSON.stringify(options.jsonBody),
 				headers: { ...(options.headers ?? {}), "Content-Type": "application/json" },
-				credentials: "include"
+				credentials: "include",
 			}
-		: options;
+		: { ...options, credentials: "include" };
 	let finalPath: string = options.query
 		? path + `?${new URLSearchParams(options.query as Record<string, string>).toString()}`
 		: path;

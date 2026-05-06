@@ -15,7 +15,7 @@ export const createGroup = async (
 	code: string,
 	req: z.infer<typeof CreateGroupRequest>,
 ): Promise<z.input<typeof CreateGroupResponse>> => {
-	if (await groupExists(code)) return { error: "codeTaken" };
+	if (await groupExists(code)) return { error: "taken" };
 	if (req.course < 1 || req.course > 4) return { error: "invalidCourse" };
 	await db
 		.insert(groups)

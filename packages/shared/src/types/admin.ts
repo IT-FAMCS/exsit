@@ -9,7 +9,7 @@ export const CreateGroupRequest = z.object({
 
 export const CreateGroupResponse = createApiResponseSchema(
 	z.null(),
-	z.enum(["codeTaken", "invalidCourse"]),
+	z.enum(["taken", "invalidCourse"]),
 );
 
 export const AddStudentsToGroupRequest = z.object({
@@ -26,3 +26,11 @@ export const AddStudentsToGroupResponse = createApiResponseSchema(
 	z.null(),
 	z.enum(["invalidGroupCode"]),
 );
+
+export const CreateAdminRequest = z.object({
+	id: z.string(),
+	name: z.string().optional(),
+	password: z.string(),
+});
+
+export const CreateAdminResponse = createApiResponseSchema(z.null(), z.enum(["taken"]));

@@ -37,7 +37,7 @@ const app = new Hono()
 			jwt({
 				alg: "HS256",
 				secret: process.env.JWT_SECRET ?? "someone forgot to set process.env.JWT_SECRET",
-				cookie: "auth",
+				cookie: "exsitauth",
 			}),
 		),
 	);

@@ -1,6 +1,6 @@
 import { AuthContext } from "@/hooks/useAuth";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
-import { MeResponse, type StudentType } from "@exsit/shared/types/auth";
+import { MeResponse, type AuthInformation } from "@exsit/shared/types/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
@@ -9,7 +9,7 @@ export default function AuthProvider() {
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	const [user, setUser] = useState<StudentType | null>(null);
+	const [user, setUser] = useState<AuthInformation | null>(null);
 	const { data } = useQuery({
 		queryKey: ["me"],
 		queryFn: async () => await expandedFetch("/me", { output: MeResponse }),
@@ -19,7 +19,7 @@ export default function AuthProvider() {
 		if (data)
 			defaultHandler(data, {
 				onError: () => navigate("/login"),
-				onSuccess: (student) => setUser(student),
+				onSuccess: (info) => setUser(info),
 			});
 	}, [data, location, navigate]);
 
