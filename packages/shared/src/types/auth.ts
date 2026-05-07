@@ -1,22 +1,21 @@
-import { createApiResponseSchema } from "./api";
 import { z } from "zod";
+import { createApiSchema } from "./api";
 
-export const VerifyGroupCodeResponse = createApiResponseSchema(
-	z.object({
+export const [, VerifyGroupCodeResponse] = createApiSchema({
+	response: z.object({
 		users: z.record(z.string(), z.string()),
 	}),
-	z.enum(["invalidGroupCode"]),
-);
+	errors: z.enum(["invalidGroupCode"]),
+});
 
-export const LoginResponse = createApiResponseSchema(
-	z.enum(["student", "admin"]),
-	z.enum(["invalidCredentials", "invalidGroupCode"]),
-);
-
-export const LoginRequest = z.object({
-	groupCode: z.string(),
-	id: z.string(),
-	password: z.string(),
+export const [LoginRequest, LoginResponse] = createApiSchema({
+	request: z.object({
+		groupCode: z.string(),
+		id: z.string(),
+		password: z.string(),
+	}),
+	response: z.enum(["student", "admin"]),
+	errors: z.enum(["invalidCredentials", "invalidGroupCode"]),
 });
 
 export const Group = z.object({
@@ -42,8 +41,8 @@ export type GroupType = z.infer<typeof Group>;
 export type StudentType = z.infer<typeof Student>;
 export type AdminType = z.infer<typeof Admin>;
 
-export const MeResponse = createApiResponseSchema(
-	z.discriminatedUnion("role", [
+export const [, MeResponse] = createApiSchema({
+	response: z.discriminatedUnion("role", [
 		z
 			.object({
 				role: z.literal("student"),
@@ -51,6 +50,7 @@ export const MeResponse = createApiResponseSchema(
 			.extend(Student.shape),
 		z.object({ role: z.literal("admin") }).extend(Admin.shape),
 	]),
-	z.enum(["invalidID", "invalidGroupCode"]),
-);
+	errors: z.enum(["invalidID", "invalidGroupCode"]),
+});
+
 export type AuthInformation = Extract<z.infer<typeof MeResponse>, { error: null }>["data"];
