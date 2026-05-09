@@ -5,8 +5,20 @@ import { Hono } from "hono";
 import { sign, type JwtVariables } from "hono/jwt";
 import { zValidator } from "@/utils/hono";
 import { setCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 
-export const auth = new Hono<{ Variables: JwtVariables }>()
+export const requireAdminPermissions = createMiddleware<{ Variables: JwtVariables }>(
+	async (c, next) => {
+		const payload = c.get("jwtPayload");
+		if (payload && typeof payload === "object" && "role" in payload && payload.role === "admin") {
+			await next();
+			return;
+		}
+		return c.body(null, 401);
+	},
+);
+
+export const authRouter = new Hono<{ Variables: JwtVariables }>()
 	.get(
 		"/verify-group-code",
 		zValidator(

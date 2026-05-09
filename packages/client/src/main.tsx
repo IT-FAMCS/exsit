@@ -6,7 +6,7 @@ import { RouterProvider } from "react-router/dom";
 import LoginRoute from "./routes/auth/login";
 import { QueryClient } from "@tanstack/react-query";
 import Provider from "./provider";
-import AuthProvider from "./routes/auth/root";
+import { AuthProvider, AdminAuthWall } from "./routes/auth/root";
 import AdminRoute from "./routes/admin";
 
 export const router = createBrowserRouter([
@@ -18,8 +18,13 @@ export const router = createBrowserRouter([
 				element: <LoginRoute />,
 			},
 			{
-				path: "/admin",
-				element: <AdminRoute />,
+				element: <AdminAuthWall />,
+				children: [
+					{
+						path: "/admin",
+						element: <AdminRoute />,
+					},
+				],
 			},
 		],
 	},

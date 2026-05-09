@@ -29,7 +29,7 @@ export const createApiSchema = <
 
 			z.object({
 				error: (options.errors ?? z.enum([])) as TOE,
-				details: z.object().optional(),
+				details: z.unknown().optional(),
 			}),
 		]),
 	] as const;

@@ -1,12 +1,14 @@
 import "dotenv/config";
-import { auth } from "./routers/auth";
+import { authRouter } from "./routers/auth";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { except } from "hono/combine";
 import { jwt } from "hono/jwt";
-import { admin } from "./routers/admin";
+import { adminRouter } from "./routers/admins";
+import { groupRouter } from "./routers/groups";
+import { examRouter } from "./routers/exams";
 
 const app = new Hono()
 	.use(logger())
@@ -42,9 +44,12 @@ const app = new Hono()
 		),
 	);
 
-app.get("/", (c) => c.text("meow!"));
-app.route("/", auth);
-app.route("/admin", admin);
+app
+	.get("/", (c) => c.text("meow!"))
+	.route("/", authRouter)
+	.route("/admins", adminRouter)
+	.route("/groups", groupRouter)
+	.route("/exams", examRouter);
 
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);

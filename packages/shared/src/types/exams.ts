@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createApiSchema } from "./api";
+import { Files } from "./files";
 
 export const MATERIALS_TAGS = ["questions"] as const;
 export const CAMPAIGN_STATES = ["created", "voting_started", "voting_ended", "finished"] as const;
@@ -44,7 +45,7 @@ export type VoteType = z.infer<typeof Vote>;
 
 export const Exam = z.object({
 	subject: z.string(),
-	date: z.date(),
+	date: z.coerce.date<string>(),
 	class: z.string(),
 	teacher: z.string(),
 	supposedOrder: SupposedOrder,
@@ -72,27 +73,33 @@ export const [GetPreparationMaterialsRequest, GetPreparationMaterialsResponse] =
 	request: z.object({
 		tag: z.enum(MATERIALS_TAGS).optional(),
 	}),
-	response: z.string(),
-	errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+	response: Files,
+	errors: z.enum(["invalidGroupCode", "invalidExamID", "missingFileMetadata"]),
 });
 
-export const [AddPreparationMaterialRequest, AddPreparationMaterialResponse] = createApiSchema({
-	request: z.object({
-		file: z.file(),
-		tag: z.enum(MATERIALS_TAGS).optional(),
-	}),
-	response: z.string(),
-	errors: z.enum(["invalidGroupCode", "invalidExamID", "fileUploadFailed"]),
-});
+export const [UploadPreparationMaterialRequest, UploadPreparationMaterialResponse] =
+	createApiSchema({
+		request: z.object({
+			file: z.file(),
+			tag: z.enum(MATERIALS_TAGS).optional(),
+		}),
+		response: z.string(),
+		errors: z.enum(["invalidGroupCode", "invalidExamID", "fileUploadFailed"]),
+	});
 
 export const [RemovePreparationMaterialRequest, RemovePreparationMaterialResponse] =
 	createApiSchema({
 		request: z.object({
-			file: z.string(),
+			id: z.string(),
 		}),
-		response: z.string(),
-		errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+		response: z.null(),
+		errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidFileID"]),
 	});
+
+export const [GetVotingCampaignsRequest, GetVotingCampaignsResponse] = createApiSchema({
+	response: z.record(z.string(), VotingCampaign),
+	errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+});
 
 export const [CreateVotingCampaignRequest, CreateVotingCampaignResponse] = createApiSchema({
 	request: z.object({
@@ -103,18 +110,10 @@ export const [CreateVotingCampaignRequest, CreateVotingCampaignResponse] = creat
 });
 
 export const [RemoveVotingCampaignRequest, RemoveVotingCampaignResponse] = createApiSchema({
-	request: z.object({
-		type: z.enum(SUPPORTED_CAMPAIGN_TYPES),
-	}),
-	response: z.string(),
-	errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+	errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidCampaignID"]),
 });
 
 export const [StartVotingCampaignRequest, StartVotingCampaignResponse] = createApiSchema({
-	request: z.object({
-		id: z.string(),
-	}),
-	response: z.string(),
 	errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidCampaignID"]),
 });
 
