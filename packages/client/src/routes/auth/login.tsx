@@ -16,12 +16,15 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { LoginRequest, LoginResponse, VerifyGroupCodeResponse } from "@exsit/shared/types/auth";
+import { useNavigate } from "react-router";
+import { Icon } from "@iconify/react";
 
 export default function LoginRoute() {
 	const [groupCode, setGroupCode] = useState("");
 	const [students, setStudents] = useState<Record<string, string> | undefined>(undefined);
 	const [id, setId] = useState("");
 	const [password, setPassword] = useState("");
+	const navigate = useNavigate();
 
 	const groupCodeFetch = useQuery({
 		queryKey: ["verify-group-code", groupCode],
@@ -57,19 +60,27 @@ export default function LoginRoute() {
 	useEffect(() => {
 		if (loginFetch.data)
 			defaultHandler(loginFetch.data, {
-				onSuccess: () => alert("yay"),
+				onSuccess: (role) => {
+					navigate(
+						role === "admin"
+							? "/admin"
+							: localStorage.getItem("onboarding-complete")
+								? "/"
+								: "/onboarding",
+					);
+				},
 				errorMessages: {
 					invalidCredentials: "Неверный логин или пароль",
 					invalidGroupCode: "Неверный код группы",
 				},
 			});
-	}, [loginFetch]);
+	}, [loginFetch, navigate]);
 
 	return (
-		<div className="flex h-screen w-screen flex-col items-center justify-center">
-			<Card className="gap-6">
+		<div className="flex h-screen w-screen flex-col items-center justify-center p-4">
+			<Card className="w-full max-w-sm gap-6">
 				<Card.Header>
-					<Logo className="text-accent w-sm" />
+					<Logo className="text-accent w-full" />
 				</Card.Header>
 				<Card.Content>
 					{students ? (
@@ -86,7 +97,7 @@ export default function LoginRoute() {
 								variant="secondary"
 								isRequired
 								name="student"
-								placeholder="Найдите себя в списке"
+								placeholder="Найди себя в списке"
 							>
 								<Label>Студент</Label>
 								<Select.Trigger>
@@ -106,11 +117,11 @@ export default function LoginRoute() {
 							</Select>
 							<TextField isRequired name="password" type="password">
 								<Label>Кодовое слово</Label>
-								<Input variant="secondary" />
+								<Input variant="secondary" placeholder="Введи кодовое слово..." />
 								<Description>Его можно будет поменять позже</Description>
 								<FieldError />
 							</TextField>
-							<Button type="submit" isPending={groupCodeFetch.isFetching}>
+							<Button type="submit" isPending={loginFetch.isFetching}>
 								{({ isPending }) => (
 									<>
 										{isPending ? <Spinner color="current" size="sm" /> : null}
@@ -129,16 +140,17 @@ export default function LoginRoute() {
 								setGroupCode(code.toString());
 							}}
 						>
-							<TextField isRequired name="groupCode" type="text">
+							<TextField isRequired name="groupCode" type="password">
 								<Label>Код группы</Label>
-								<Input variant="secondary" />
+								<Input variant="secondary" placeholder="Введи код группы..." />
 								<FieldError />
 							</TextField>
 							<Button type="submit" isPending={groupCodeFetch.isFetching}>
 								{({ isPending }) => (
 									<>
 										{isPending ? <Spinner color="current" size="sm" /> : null}
-										Продолжить
+										Далее
+										<Icon icon="mdi:chevron-right" />
 									</>
 								)}
 							</Button>

@@ -18,6 +18,12 @@ export const [LoginRequest, LoginResponse] = createApiSchema({
 	errors: z.enum(["invalidCredentials", "invalidGroupCode"]),
 });
 
+export const [ChangePasswordRequest, ChangePasswordResponse] = createApiSchema({
+	request: z.object({ newPassword: z.string() }),
+	response: z.null(),
+	errors: z.enum(["invalidID", "invalidGroupCode"]),
+});
+
 export const Group = z.object({
 	code: z.string(),
 	course: z.number(),

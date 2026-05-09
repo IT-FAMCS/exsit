@@ -8,14 +8,24 @@ import { QueryClient } from "@tanstack/react-query";
 import Provider from "./provider";
 import { AuthProvider, AdminAuthWall } from "./routes/auth/root";
 import AdminRoute from "./routes/admin";
+import MainRoute from "./routes/main";
+import OnboardingRoute from "./routes/auth/onboarding";
 
 export const router = createBrowserRouter([
 	{
 		element: <AuthProvider />,
 		children: [
 			{
+				path: "/",
+				element: <MainRoute />,
+			},
+			{
 				path: "/login",
 				element: <LoginRoute />,
+			},
+			{
+				path: "/onboarding",
+				element: <OnboardingRoute />,
 			},
 			{
 				element: <AdminAuthWall />,

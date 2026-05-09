@@ -5,6 +5,8 @@ import {
 	LoginRequest,
 	VerifyGroupCodeResponse,
 	MeResponse,
+	ChangePasswordResponse,
+	ChangePasswordRequest,
 } from "@exsit/shared/types/auth";
 import { admins, students } from "../schema/users";
 import { eq } from "drizzle-orm";
@@ -102,6 +104,20 @@ export const addStudentsToGroup = async (
 		),
 	);
 	await db.insert(students).values(dbStudents);
+	return ok(null);
+};
+
+export const changeUserPassword = async (
+	payload: {
+		role: "student" | "admin";
+		id: string;
+	},
+	req: z.infer<typeof ChangePasswordRequest>,
+): Promise<z.infer<typeof ChangePasswordResponse>> => {
+	await db
+		.update(payload.role === "student" ? students : admins)
+		.set({ passwordHash: await argon2.hash(req.newPassword) })
+		.where(eq(payload.role === "student" ? students.id : admins.id, payload.id));
 	return ok(null);
 };
 

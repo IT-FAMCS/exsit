@@ -1,6 +1,11 @@
 import { z } from "zod";
-import { LoginRequest } from "@exsit/shared/types/auth";
-import { getAuthInfo, getUsersByGroupCode, tryLoginUser } from "@/db/actions/users";
+import { ChangePasswordRequest, LoginRequest } from "@exsit/shared/types/auth";
+import {
+	changeUserPassword,
+	getAuthInfo,
+	getUsersByGroupCode,
+	tryLoginUser,
+} from "@/db/actions/users";
 import { Hono } from "hono";
 import { sign, type JwtVariables } from "hono/jwt";
 import { zValidator } from "@/utils/hono";
@@ -51,4 +56,8 @@ export const authRouter = new Hono<{ Variables: JwtVariables }>()
 	.get("/me", async (c) => {
 		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
 		return c.json(await getAuthInfo(payload));
+	})
+	.patch("/me/change-password", zValidator("query", ChangePasswordRequest), async (c) => {
+		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
+		return c.json(await changeUserPassword(payload, c.req.valid("query")));
 	});
