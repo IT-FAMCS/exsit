@@ -2,7 +2,6 @@ import Logo from "@/components/Logo";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
 import {
 	Button,
-	Card,
 	Description,
 	FieldError,
 	Form,
@@ -61,13 +60,12 @@ export default function LoginRoute() {
 		if (loginFetch.data)
 			defaultHandler(loginFetch.data, {
 				onSuccess: (role) => {
-					navigate(
+					window.location.href =
 						role === "admin"
 							? "/admin"
 							: localStorage.getItem("onboarding-complete")
 								? "/"
-								: "/onboarding",
-					);
+								: "/onboarding";
 				},
 				errorMessages: {
 					invalidCredentials: "Неверный логин или пароль",
@@ -77,87 +75,79 @@ export default function LoginRoute() {
 	}, [loginFetch, navigate]);
 
 	return (
-		<div className="flex h-screen w-screen flex-col items-center justify-center p-4">
-			<Card className="w-full max-w-sm gap-6">
-				<Card.Header>
-					<Logo className="text-accent w-full" />
-				</Card.Header>
-				<Card.Content>
-					{students ? (
-						<Form
-							className="flex flex-col gap-2"
-							onSubmit={(e) => {
-								e.preventDefault();
-								const formData = new FormData(e.currentTarget);
-								setId(formData.get("student")!.toString());
-								setPassword(formData.get("password")!.toString());
-							}}
-						>
-							<Select
-								variant="secondary"
-								isRequired
-								name="student"
-								placeholder="Найди себя в списке"
-							>
-								<Label>Студент</Label>
-								<Select.Trigger>
-									<Select.Value />
-									<Select.Indicator />
-								</Select.Trigger>
-								<Select.Popover>
-									<ListBox>
-										{Object.entries(students).map(([id, fullname]) => (
-											<ListBox.Item id={id} key={id} textValue={fullname}>
-												{fullname}
-												<ListBox.ItemIndicator />
-											</ListBox.Item>
-										))}
-									</ListBox>
-								</Select.Popover>
-							</Select>
-							<TextField isRequired name="password" type="password">
-								<Label>Кодовое слово</Label>
-								<Input variant="secondary" placeholder="Введи кодовое слово..." />
-								<Description>Его можно будет поменять позже</Description>
-								<FieldError />
-							</TextField>
-							<Button type="submit" isPending={loginFetch.isFetching}>
-								{({ isPending }) => (
-									<>
-										{isPending ? <Spinner color="current" size="sm" /> : null}
-										Войти
-									</>
-								)}
-							</Button>
-						</Form>
-					) : (
-						<Form
-							className="flex flex-col gap-2"
-							onSubmit={(e) => {
-								e.preventDefault();
-								const code = new FormData(e.currentTarget).get("groupCode");
-								if (!code) return;
-								setGroupCode(code.toString());
-							}}
-						>
-							<TextField isRequired name="groupCode" type="password">
-								<Label>Код группы</Label>
-								<Input variant="secondary" placeholder="Введи код группы..." />
-								<FieldError />
-							</TextField>
-							<Button type="submit" isPending={groupCodeFetch.isFetching}>
-								{({ isPending }) => (
-									<>
-										{isPending ? <Spinner color="current" size="sm" /> : null}
-										Далее
-										<Icon icon="mdi:chevron-right" />
-									</>
-								)}
-							</Button>
-						</Form>
-					)}
-				</Card.Content>
-			</Card>
+		<div className="flex h-dvh w-dvw flex-col items-center justify-center p-4">
+			<div className="flex max-w-sm flex-col items-center justify-center gap-6">
+				<Logo className="text-accent w-full" />
+
+				{students ? (
+					<Form
+						className="flex w-full flex-col gap-2"
+						onSubmit={(e) => {
+							e.preventDefault();
+							const formData = new FormData(e.currentTarget);
+							setId(formData.get("student")!.toString());
+							setPassword(formData.get("password")!.toString());
+						}}
+					>
+						<Select isRequired name="student" placeholder="Найди себя в списке">
+							<Label>Студент</Label>
+							<Select.Trigger>
+								<Select.Value />
+								<Select.Indicator />
+							</Select.Trigger>
+							<Select.Popover>
+								<ListBox>
+									{Object.entries(students).map(([id, fullname]) => (
+										<ListBox.Item id={id} key={id} textValue={fullname}>
+											{fullname}
+											<ListBox.ItemIndicator />
+										</ListBox.Item>
+									))}
+								</ListBox>
+							</Select.Popover>
+						</Select>
+						<TextField isRequired name="password" type="password">
+							<Label>Кодовое слово</Label>
+							<Input placeholder="Введи кодовое слово..." />
+							<Description>Его можно будет поменять позже</Description>
+							<FieldError />
+						</TextField>
+						<Button type="submit" isPending={loginFetch.isFetching}>
+							{({ isPending }) => (
+								<>
+									{isPending ? <Spinner color="current" size="sm" /> : null}
+									Войти
+								</>
+							)}
+						</Button>
+					</Form>
+				) : (
+					<Form
+						className="flex w-full flex-col gap-2"
+						onSubmit={(e) => {
+							e.preventDefault();
+							const code = new FormData(e.currentTarget).get("groupCode");
+							if (!code) return;
+							setGroupCode(code.toString());
+						}}
+					>
+						<TextField isRequired name="groupCode" type="password">
+							<Label>Код группы</Label>
+							<Input placeholder="Введи код группы..." />
+							<FieldError />
+						</TextField>
+						<Button type="submit" isPending={groupCodeFetch.isFetching}>
+							{({ isPending }) => (
+								<>
+									{isPending ? <Spinner color="current" size="sm" /> : null}
+									Далее
+									<Icon icon="mdi:chevron-right" />
+								</>
+							)}
+						</Button>
+					</Form>
+				)}
+			</div>
 		</div>
 	);
 }

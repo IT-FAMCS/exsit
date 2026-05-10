@@ -4,8 +4,8 @@ import { createApiSchema } from "./api";
 export const FileMetadata = z.object({
 	filename: z.string(),
 	type: z.string(),
-	uploaded: z.date(),
-	modified: z.date().nullable(),
+	uploaded: z.coerce.date<string>(),
+	modified: z.coerce.date<string>().nullable(),
 	size: z.number(),
 });
 export type FileMetadataType = z.infer<typeof FileMetadata>;

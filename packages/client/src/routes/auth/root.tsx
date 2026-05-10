@@ -19,7 +19,7 @@ export function AuthProvider() {
 		if (location.pathname === "/login") return;
 		if (data)
 			defaultHandler(data, {
-				onError: () => navigate("/login"),
+				onError: () => (window.location.href = "/login"),
 				onSuccess: (info) => setUser(info),
 			});
 	}, [data, location, navigate]);
@@ -29,7 +29,7 @@ export function AuthProvider() {
 			{data ? (
 				<Outlet />
 			) : (
-				<div className="flex h-screen w-screen items-center justify-center">
+				<div className="flex h-dvh w-dvw items-center justify-center">
 					<Spinner />
 				</div>
 			)}
@@ -44,14 +44,14 @@ export function AdminAuthWall() {
 	useEffect(() => {
 		if (auth && auth.role === "student") {
 			alert("У вас нет прав просматривать эту страницу.");
-			navigate("/login");
+			window.location.href = "/login";
 		}
 	}, [auth, navigate]);
 
 	return auth && auth.role === "admin" ? (
 		<Outlet />
 	) : (
-		<div className="flex h-screen w-screen items-center justify-center">
+		<div className="flex h-dvh w-dvw items-center justify-center">
 			<Spinner />
 		</div>
 	);

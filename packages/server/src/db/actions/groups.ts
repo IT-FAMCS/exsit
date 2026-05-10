@@ -1,7 +1,7 @@
 import { CreateGroupRequest, CreateGroupResponse } from "@exsit/shared/types/admin";
 import { z } from "zod";
 import { db } from "../connection";
-import { groups } from "../schema/users";
+import { groups, students } from "../schema/users";
 import { eq } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
 
@@ -10,6 +10,10 @@ export const getGroupById = async (code: string) => {
 	const [group] = await db.select().from(groups).where(eq(groups.code, code)).limit(1);
 	return group;
 };
+export const getGroupByStudentId = async (user: string) =>
+	(
+		await db.select({ group: students.group }).from(students).where(eq(students.id, user)).limit(1)
+	)?.at(0)?.group;
 
 export const createGroup = async (
 	code: string,

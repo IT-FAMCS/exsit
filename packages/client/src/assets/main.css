@@ -16,3 +16,34 @@
         font-family: InterVariable, sans-serif;
     }
 }
+
+.pressable-card {
+    @apply isolate outline-none;
+
+    transition:
+        transform 250ms var(--ease-out-quart),
+        background-color 150ms var(--ease-smooth),
+        box-shadow 150ms var(--ease-out);
+    @apply transform-gpu motion-reduce:transition-none;
+
+    cursor: var(--cursor-interactive);
+
+    &:focus-visible:not(:focus),
+    &[data-focus-visible] {
+        @apply status-focused;
+    }
+
+    &:disabled,
+    &[aria-disabled] {
+        @apply status-disabled;
+    }
+
+    &[data-pending] {
+        @apply status-pending;
+    }
+
+    &:active,
+    &[data-pressed] {
+        transform: scale(0.97);
+    }
+}

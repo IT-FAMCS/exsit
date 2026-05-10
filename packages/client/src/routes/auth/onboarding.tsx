@@ -88,7 +88,7 @@ export default function OnboardingRoute() {
 	}, [changePasswordFetch]);
 
 	return (
-		<div className="relative flex h-screen w-screen items-center justify-center p-4">
+		<div className="relative flex h-dvh w-dvw items-center justify-center p-4">
 			{step === "welcome" && (
 				<div className="flex w-sm flex-col items-center justify-center gap-4">
 					<p className="text-4xl font-bold">Добро пожаловать в</p>
@@ -191,10 +191,7 @@ export default function OnboardingRoute() {
 					>
 						<TextField name="newPassword" type="password">
 							<Label>Новое кодовое слово</Label>
-							<Input
-								variant="secondary"
-								placeholder="Введи новое кодовое слово (необязательно)..."
-							/>
+							<Input placeholder="Введи новое кодовое слово (необязательно)..." />
 							<FieldError />
 						</TextField>
 
@@ -240,7 +237,7 @@ export default function OnboardingRoute() {
 					</Button>
 				</div>
 			)}
-			<div className="absolute bottom-4 flex w-screen flex-row items-center justify-center gap-2">
+			<div className="absolute bottom-4 flex w-dvw flex-row items-center justify-center gap-2">
 				{createStepIcon("welcome")}
 				{createStepIcon("explanation")}
 				{createStepIcon("set-theme")}

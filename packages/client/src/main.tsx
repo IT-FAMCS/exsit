@@ -10,29 +10,39 @@ import { AuthProvider, AdminAuthWall } from "./routes/auth/root";
 import AdminRoute from "./routes/admin";
 import MainRoute from "./routes/main";
 import OnboardingRoute from "./routes/auth/onboarding";
+import ViewExamDetailsRoute from "./routes/exam/view";
+import VoteRoute from "./routes/exam/vote";
 
 export const router = createBrowserRouter([
 	{
-		element: <AuthProvider />,
+		Component: AuthProvider,
 		children: [
 			{
 				path: "/",
-				element: <MainRoute />,
+				Component: MainRoute,
 			},
 			{
 				path: "/login",
-				element: <LoginRoute />,
+				Component: LoginRoute,
 			},
 			{
 				path: "/onboarding",
-				element: <OnboardingRoute />,
+				Component: OnboardingRoute,
 			},
 			{
-				element: <AdminAuthWall />,
+				path: "/exam/:exam",
+				Component: ViewExamDetailsRoute,
+			},
+			{
+				path: "/exam/:exam/vote/:campaign",
+				Component: VoteRoute,
+			},
+			{
+				Component: AdminAuthWall,
 				children: [
 					{
 						path: "/admin",
-						element: <AdminRoute />,
+						Component: AdminRoute,
 					},
 				],
 			},

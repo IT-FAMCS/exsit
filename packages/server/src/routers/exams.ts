@@ -2,6 +2,8 @@ import {
 	campaignExists,
 	createVotingCampaign,
 	examExists,
+	getExamById,
+	getExams,
 	getPreparationMaterials,
 	getVotingCampaigns,
 	removePreparationMaterial,
@@ -13,21 +15,49 @@ import { requireExisting, zValidator } from "@/utils/hono";
 import {
 	CreateVotingCampaignRequest,
 	GetPreparationMaterialsRequest,
+	GetSpecificExamResponse,
 	RemovePreparationMaterialRequest,
 	UploadPreparationMaterialRequest,
 } from "@exsit/shared/types/exams";
 import { Hono } from "hono";
 import { requireAdminPermissions } from "./auth";
 import { except } from "hono/combine";
+import { JwtVariables } from "hono/jwt";
+import { getGroupByStudentId } from "@/db/actions/groups";
+import { ok } from "@exsit/shared/types/api";
+import z from "zod";
 
 const requireExistingExam = requireExisting("id", "invalidExamID", examExists);
 const requireExistingCampaign = requireExisting("campaign", "invalidCampaignID", campaignExists);
 
-export const examRouter = new Hono()
-	.use("*", except(["/exams/:id/materials", "/exams/:id/campaigns"], requireAdminPermissions))
+export const examRouter = new Hono<{ Variables: JwtVariables }>()
+	.use(
+		"*",
+		except(
+			["/exams", "/exams/:id", "/exams/:id/materials", "/exams/:id/campaigns"],
+			requireAdminPermissions,
+		),
+	)
 	.use("/:id/*", requireExistingExam)
 	.use("/:id/campaigns/:campaign/*", requireExistingCampaign)
 
+	.get("/", async (c) => {
+		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
+		const group =
+			payload.role === "admin"
+				? process.env.ADMINS_GROUP_CODE
+				: await getGroupByStudentId(payload.id);
+		if (!group) return c.json({ error: "invalidGroupCode" });
+		return c.json(await getExams(group));
+	})
+	.get("/:id", async (c) => {
+		const exam = (await getExamById(c.req.param("id")))!;
+		return c.json(
+			ok({ ...exam, date: exam.date ? exam.date.toISOString() : null }) satisfies z.input<
+				typeof GetSpecificExamResponse
+			>,
+		);
+	})
 	.get("/:id/materials", zValidator("query", GetPreparationMaterialsRequest), async (c) =>
 		c.json(await getPreparationMaterials(c.req.param("id"), c.req.valid("query").tag)),
 	)

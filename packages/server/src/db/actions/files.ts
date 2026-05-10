@@ -22,7 +22,11 @@ export const getFileMetadata = async (
 	const meta = (await db.select().from(files).where(eq(files.id, req.file)))?.[0];
 	if (!meta) return { error: "notFound" };
 	const { data: _, id: __, ...rest } = meta;
-	return ok(rest);
+	return ok({
+		...rest,
+		uploaded: rest.uploaded.toISOString(),
+		modified: rest.modified ? rest.modified.toISOString() : null,
+	});
 };
 
 export const getBatchFileMetadata = async (
@@ -38,7 +42,14 @@ export const getBatchFileMetadata = async (
 		Object.fromEntries(
 			metadata.map((m) => {
 				const { data: _, id, ...rest } = m;
-				return [id, rest];
+				return [
+					id,
+					{
+						...rest,
+						uploaded: rest.uploaded.toISOString(),
+						modified: rest.modified ? rest.modified.toISOString() : null,
+					},
+				];
 			}),
 		),
 	);
