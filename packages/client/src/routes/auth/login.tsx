@@ -60,6 +60,7 @@ export default function LoginRoute() {
 		if (loginFetch.data)
 			defaultHandler(loginFetch.data, {
 				onSuccess: (role) => {
+					// force reload here since AuthProvider won't react to login
 					window.location.href =
 						role === "admin"
 							? "/admin"

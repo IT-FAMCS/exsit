@@ -19,7 +19,7 @@ export function AuthProvider() {
 		if (location.pathname === "/login") return;
 		if (data)
 			defaultHandler(data, {
-				onError: () => (window.location.href = "/login"),
+				onError: () => navigate("/login"),
 				onSuccess: (info) => setUser(info),
 			});
 	}, [data, location, navigate]);
@@ -44,7 +44,7 @@ export function AdminAuthWall() {
 	useEffect(() => {
 		if (auth && auth.role === "student") {
 			alert("У вас нет прав просматривать эту страницу.");
-			window.location.href = "/login";
+			navigate("/login");
 		}
 	}, [auth, navigate]);
 

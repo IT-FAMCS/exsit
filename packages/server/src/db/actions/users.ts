@@ -98,7 +98,7 @@ export const addStudentsToGroup = async (
 					fullName: s.fullName,
 					informalFirstName: s.informalFirstName,
 					group: code,
-					id: v7(),
+					id: `S-${v7()}`,
 					passwordHash: await argon2.hash(s.password),
 				}) satisfies typeof students.$inferInsert,
 		),

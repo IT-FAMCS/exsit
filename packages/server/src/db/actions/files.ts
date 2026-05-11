@@ -10,6 +10,7 @@ import { db } from "../connection";
 import { eq, inArray } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
 import { v7 } from "uuid";
+import { compressBuffer } from "@/utils/compression";
 
 export const fileExists = async (id: string) =>
 	!!(await db.select().from(files).where(eq(files.id, id)))?.[0];
@@ -57,14 +58,14 @@ export const getBatchFileMetadata = async (
 
 export const uploadFile = async (file: File): Promise<string | undefined> => {
 	try {
-		const id = v7();
+		const id = `F-${v7()}`;
 		await db.insert(files).values({
 			id,
 			filename: file.name,
 			size: file.size,
 			type: file.type,
 			uploaded: new Date(),
-			data: Buffer.from(await file.arrayBuffer()),
+			data: await compressBuffer(await file.arrayBuffer()),
 		});
 		return id;
 	} catch {

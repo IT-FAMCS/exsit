@@ -99,8 +99,6 @@ export const expandedFetch = async <TOut extends AnyAPIResponseSchema>(
 	let json: Record<string, unknown> = {};
 	try {
 		const result = await fetch(route(finalPath), finalOptions);
-		if (result.status === 401 && router.state.location.pathname !== "/login")
-			window.location.href = "/login";
 		json = await result.json();
 	} catch (exception) {
 		return { ok: false, error: "fetch", exception, meta };

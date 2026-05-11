@@ -75,7 +75,7 @@ export default function MainRoute() {
 
 	if (!auth) return null;
 	if (auth.role === "admin") {
-		window.location.href = "/admin";
+		navigate("/admin");
 		return null;
 	}
 

@@ -7,7 +7,7 @@ import {
 	SupposedOrderType,
 	VoteType,
 } from "@exsit/shared/types/exams";
-import { groups } from "./users";
+import { groups, students } from "./users";
 
 export const exams = s.sqliteTable("exams", {
 	id: s.text().primaryKey(),
@@ -48,3 +48,15 @@ export const votes = s.sqliteTable(
 	},
 	(t) => [s.primaryKey({ columns: [t.user, t.campaign] })],
 );
+
+export const votingTransactions = s.sqliteTable("voting_transactions", {
+	id: s.text().primaryKey(),
+	student: s
+		.text()
+		.notNull()
+		.references(() => students.id),
+	votingCampaign: s
+		.text()
+		.notNull()
+		.references(() => votingCampaigns.id),
+});

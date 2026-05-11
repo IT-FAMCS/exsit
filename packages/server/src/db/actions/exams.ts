@@ -39,7 +39,7 @@ export const createExam = async (
 	group: string,
 	req: z.infer<typeof CreateExamRequest>,
 ): Promise<z.input<typeof CreateExamResponse>> => {
-	const id = v7();
+	const id = `E-${v7()}`;
 	await db.insert(exams).values({
 		id,
 		group,
@@ -149,7 +149,7 @@ export const createVotingCampaign = async (
 			.where(and(eq(votingCampaigns.type, req.type), eq(votingCampaigns.exam, exam)))
 	)?.[0];
 	if (exists) return { error: "alreadyExists" };
-	const id = v7();
+	const id = `VC-${v7()}`;
 	await db.insert(votingCampaigns).values({
 		id,
 		exam,
