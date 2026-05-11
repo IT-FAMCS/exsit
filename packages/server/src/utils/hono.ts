@@ -30,7 +30,6 @@ export const requireExisting = (
 ) =>
 	createMiddleware(async (c, next) => {
 		const value = c.req.param(param) as string | undefined;
-		console.log(value);
 		if (!value || !(await checker(value))) return c.json({ error }, 400);
 		await next();
 		return;

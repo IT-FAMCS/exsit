@@ -12,14 +12,14 @@ import { admins, students } from "../schema/users";
 import { eq } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
 import * as argon2 from "argon2";
-import { getGroupById, groupExists } from "./groups";
+import { getGroupById, getGroupByPublicCode } from "./groups";
 import {
 	AddStudentsToGroupRequest,
 	AddStudentsToGroupResponse,
 	CreateAdminRequest,
 	CreateAdminResponse,
 } from "@exsit/shared/types/admin";
-import { v7 } from "uuid";
+import { ulid } from "ulid";
 
 export const tryLoginUser = async (
 	req: z.infer<typeof LoginRequest>,
@@ -77,28 +77,28 @@ export const getUsersByGroupCode = async (
 		const allAdmins = await db.select({ id: admins.id, name: admins.name }).from(admins);
 		return ok({ users: Object.fromEntries(allAdmins.map((aa) => [aa.id, aa.name])) });
 	}
-	if (!(await groupExists(code))) return { error: "invalidGroupCode" };
+	const group = await getGroupByPublicCode(code);
+	if (!group) return { error: "invalidGroupCode" };
 
 	const matchingStudents = await db
 		.select({ id: students.id, fullName: students.fullName })
 		.from(students)
-		.where(eq(students.group, code));
+		.where(eq(students.group, group.id));
 	return ok({ users: Object.fromEntries(matchingStudents.map((ms) => [ms.id, ms.fullName])) });
 };
 
 export const addStudentsToGroup = async (
-	code: string,
+	group: string,
 	req: z.infer<typeof AddStudentsToGroupRequest>,
 ): Promise<z.input<typeof AddStudentsToGroupResponse>> => {
-	if (!(await groupExists(code))) return { error: "invalidGroupCode" };
 	const dbStudents = await Promise.all(
 		req.students.map(
 			async (s) =>
 				({
 					fullName: s.fullName,
 					informalFirstName: s.informalFirstName,
-					group: code,
-					id: `S-${v7()}`,
+					group,
+					id: `S-${ulid()}`,
 					passwordHash: await argon2.hash(s.password),
 				}) satisfies typeof students.$inferInsert,
 		),
@@ -146,7 +146,8 @@ export const getAuthInfo = async (payload: {
 				fullName: student.fullName,
 				informalFirstName: student.informalFirstName,
 				group: {
-					code: group.code,
+					id: group.id,
+					publicCode: group.publicCode,
 					course: Number(group.course),
 					num: Number(group.num),
 					department: group.department,

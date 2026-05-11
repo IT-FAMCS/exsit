@@ -53,14 +53,16 @@ function ExamCard(props: { id: string; exam: ExamType }) {
 export default function MainRoute() {
 	const auth = useAuth();
 	const navigate = useNavigate();
+	const group = auth?.role === "student" ? auth.group.id : "";
 
 	const [exams, setExams] = useState<Record<string, ExamType> | undefined>(undefined);
 	const examsFetch = useQuery({
-		queryKey: ["get-exams"],
+		queryKey: ["get-exams", group],
 		queryFn: async () =>
-			await expandedFetch("/exams", {
+			await expandedFetch(`/groups/${group}/exams`, {
 				output: GetExamsResponse,
 			}),
+		enabled: !!group,
 	});
 
 	useEffect(() => {

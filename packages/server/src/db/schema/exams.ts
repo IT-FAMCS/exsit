@@ -13,7 +13,7 @@ export const exams = s.sqliteTable("exams", {
 	id: s.text().primaryKey(),
 	group: s
 		.text()
-		.references(() => groups.code)
+		.references(() => groups.id)
 		.notNull(),
 	subject: s.text().notNull(),
 	date: s.integer({ mode: "timestamp_ms" }),

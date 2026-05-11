@@ -1,5 +1,5 @@
 import Logo from "@/components/Logo";
-import { defaultHandler, expandedFetch } from "@/utils/fetch";
+import { defaultHandler, expandedFetch, route } from "@/utils/fetch";
 import {
 	GetPreparationMaterialsResponse,
 	GetSpecificExamResponse,
@@ -9,7 +9,7 @@ import {
 	type VotingCampaignsType,
 	type VotingCampaignType,
 } from "@exsit/shared/types/exams";
-import { Button, Card, Chip, ScrollShadow, Separator, Spinner, Tabs } from "@heroui/react";
+import { Button, Card, Chip, Link, ScrollShadow, Separator, Spinner, Tabs } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -45,9 +45,15 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 									)}
 								</Card.Header>
 							</div>
-							<Button isIconOnly>
-								{m.type === "file" ? <Icon icon="mdi:download" /> : <Icon icon="mdi:open-in-new" />}
-							</Button>
+							<Link href={m.type === "file" ? route(`/files/${m.id}`) : m.link} target="_blank">
+								<Button isIconOnly>
+									{m.type === "file" ? (
+										<Icon icon="mdi:download" />
+									) : (
+										<Icon icon="mdi:open-in-new" />
+									)}
+								</Button>
+							</Link>
 						</div>
 					</Card>
 				))

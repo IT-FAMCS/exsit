@@ -13,6 +13,10 @@ export type FileMetadataType = z.infer<typeof FileMetadata>;
 export const Files = z.record(z.string(), FileMetadata);
 export type FilesType = z.infer<typeof Files>;
 
+export const [, GetFileResponse] = createApiSchema({
+	errors: z.enum(["notFound"]),
+});
+
 export const [GetFileMetadataRequest, GetFileMetadataResponse] = createApiSchema({
 	request: z.object({ file: z.string() }),
 	response: FileMetadata,

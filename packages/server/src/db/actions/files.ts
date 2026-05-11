@@ -9,23 +9,23 @@ import {
 import { db } from "../connection";
 import { eq, inArray } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
-import { v7 } from "uuid";
 import { compressBuffer } from "@/utils/compression";
+import { decodeTime, ulid } from "ulid";
 
-export const fileExists = async (id: string) =>
-	!!(await db.select().from(files).where(eq(files.id, id)))?.[0];
-
+export const fileExists = async (id: string) => !!getFile(id);
 export const removeFile = async (id: string) => await db.delete(files).where(eq(files.id, id));
+export const getFile = async (id: string) =>
+	(await db.select().from(files).where(eq(files.id, id)))?.[0];
 
 export const getFileMetadata = async (
 	req: z.infer<typeof GetFileMetadataRequest>,
 ): Promise<z.input<typeof GetFileMetadataResponse>> => {
 	const meta = (await db.select().from(files).where(eq(files.id, req.file)))?.[0];
 	if (!meta) return { error: "notFound" };
-	const { data: _, id: __, ...rest } = meta;
+	const { data: _, id, ...rest } = meta;
 	return ok({
 		...rest,
-		uploaded: rest.uploaded.toISOString(),
+		uploaded: new Date(decodeTime(id.slice(2))).toISOString(),
 		modified: rest.modified ? rest.modified.toISOString() : null,
 	});
 };
@@ -47,7 +47,7 @@ export const getBatchFileMetadata = async (
 					id,
 					{
 						...rest,
-						uploaded: rest.uploaded.toISOString(),
+						uploaded: new Date(decodeTime(id.slice(2))).toISOString(),
 						modified: rest.modified ? rest.modified.toISOString() : null,
 					},
 				];
@@ -58,13 +58,12 @@ export const getBatchFileMetadata = async (
 
 export const uploadFile = async (file: File): Promise<string | undefined> => {
 	try {
-		const id = `F-${v7()}`;
+		const id = `F-${ulid()}`;
 		await db.insert(files).values({
 			id,
 			filename: file.name,
 			size: file.size,
 			type: file.type,
-			uploaded: new Date(),
 			data: await compressBuffer(await file.arrayBuffer()),
 		});
 		return id;

@@ -4,7 +4,8 @@ import * as s from "drizzle-orm/sqlite-core";
 export const groups = s.sqliteTable(
 	"groups",
 	{
-		code: s.text().primaryKey(),
+		id: s.text().primaryKey(),
+		publicCode: s.text().notNull(),
 		course: s.integer().notNull(),
 		num: s.integer().notNull(),
 		department: s.text(),
@@ -19,7 +20,7 @@ export const students = s.sqliteTable("students", {
 	group: s
 		.text()
 		.notNull()
-		.references(() => groups.code),
+		.references(() => groups.id),
 	passwordHash: s.text().notNull(),
 });
 

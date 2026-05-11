@@ -9,6 +9,7 @@ import { jwt } from "hono/jwt";
 import { adminRouter } from "./routers/admins";
 import { groupRouter } from "./routers/groups";
 import { examRouter } from "./routers/exams";
+import { fileRouter } from "./routers/files";
 
 const app = new Hono()
 	.use(logger())
@@ -49,7 +50,8 @@ app
 	.route("/", authRouter)
 	.route("/admins", adminRouter)
 	.route("/groups", groupRouter)
-	.route("/exams", examRouter);
+	.route("/exams", examRouter)
+	.route("/files", fileRouter);
 
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);

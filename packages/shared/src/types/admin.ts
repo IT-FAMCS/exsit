@@ -3,11 +3,12 @@ import { createApiSchema } from "./api";
 
 export const [CreateGroupRequest, CreateGroupResponse] = createApiSchema({
 	request: z.object({
+		code: z.string(),
 		course: z.number(),
 		num: z.number(),
 		department: z.string().nullable(),
 	}),
-	response: z.null(),
+	response: z.string(),
 	errors: z.enum(["taken", "invalidCourse"]),
 });
 

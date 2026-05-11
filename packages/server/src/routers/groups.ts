@@ -6,21 +6,23 @@ import { Hono } from "hono";
 import { requireAdminPermissions } from "./auth";
 import { JwtVariables } from "hono/jwt";
 import { CreateExamRequest } from "@exsit/shared/types/exams";
-import { createExam } from "@/db/actions/exams";
+import { createExam, getExams } from "@/db/actions/exams";
 import { except } from "hono/combine";
 
-const requireExistingGroup = requireExisting("code", "invalidGroupCode", groupExists);
+const requireExistingGroup = requireExisting("group", "invalidGroupCode", groupExists);
 
 export const groupRouter = new Hono<{ Variables: JwtVariables }>()
-	.use("*", requireAdminPermissions)
-	.use("/:code/*", except("/groups/:code/create", requireExistingGroup))
+	.use("*", except("/groups/:group/exams", requireAdminPermissions))
 
-	.post("/:code/create", zValidator("json", CreateGroupRequest), async (c) =>
-		c.json(await createGroup(c.req.param("code"), c.req.valid("json"))),
+	.post("/create", zValidator("json", CreateGroupRequest), async (c) =>
+		c.json(await createGroup(c.req.valid("json"))),
 	)
-	.patch("/:code/add-students", zValidator("json", AddStudentsToGroupRequest), async (c) =>
-		c.json(await addStudentsToGroup(c.req.param("code"), c.req.valid("json"))),
+
+	.use("/:group/*", requireExistingGroup)
+	.patch("/:group/add-students", zValidator("json", AddStudentsToGroupRequest), async (c) =>
+		c.json(await addStudentsToGroup(c.req.param("group"), c.req.valid("json"))),
 	)
-	.post("/:code/create-exam", zValidator("json", CreateExamRequest), async (c) =>
-		c.json(await createExam(c.req.param("code"), c.req.valid("json"))),
-	);
+	.post("/:group/create-exam", zValidator("json", CreateExamRequest), async (c) =>
+		c.json(await createExam(c.req.param("group"), c.req.valid("json"))),
+	)
+	.get("/:group/exams", async (c) => c.json(await getExams(c.req.param("group"))));

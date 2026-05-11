@@ -3,7 +3,6 @@ import {
 	createVotingCampaign,
 	examExists,
 	getExamById,
-	getExams,
 	getPreparationMaterials,
 	getVotingCampaigns,
 	removePreparationMaterial,
@@ -23,7 +22,6 @@ import { Hono } from "hono";
 import { requireAdminPermissions } from "./auth";
 import { except } from "hono/combine";
 import { JwtVariables } from "hono/jwt";
-import { getGroupByStudentId } from "@/db/actions/groups";
 import { ok } from "@exsit/shared/types/api";
 import z from "zod";
 
@@ -41,15 +39,6 @@ export const examRouter = new Hono<{ Variables: JwtVariables }>()
 	.use("/:id/*", requireExistingExam)
 	.use("/:id/campaigns/:campaign/*", requireExistingCampaign)
 
-	.get("/", async (c) => {
-		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
-		const group =
-			payload.role === "admin"
-				? process.env.ADMINS_GROUP_CODE
-				: await getGroupByStudentId(payload.id);
-		if (!group) return c.json({ error: "invalidGroupCode" });
-		return c.json(await getExams(group));
-	})
 	.get("/:id", async (c) => {
 		const exam = (await getExamById(c.req.param("id")))!;
 		return c.json(

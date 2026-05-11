@@ -16,12 +16,15 @@ export function AuthProvider() {
 		queryFn: async () => await expandedFetch("/me", { output: MeResponse }),
 	});
 	useEffect(() => {
-		if (location.pathname === "/login") return;
-		if (data)
-			defaultHandler(data, {
-				onError: () => navigate("/login"),
-				onSuccess: (info) => setUser(info),
-			});
+		if (location.pathname === "/login" || !data) return;
+		if (!data.ok) {
+			navigate("/login");
+			return;
+		}
+		defaultHandler(data, {
+			onError: () => navigate("/login"),
+			onSuccess: (info) => setUser(info),
+		});
 	}, [data, location, navigate]);
 
 	return (

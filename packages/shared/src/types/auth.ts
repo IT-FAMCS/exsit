@@ -25,7 +25,8 @@ export const [ChangePasswordRequest, ChangePasswordResponse] = createApiSchema({
 });
 
 export const Group = z.object({
-	code: z.string(),
+	id: z.string(),
+	publicCode: z.string(),
 	course: z.number(),
 	num: z.number(),
 	department: z.string().nullable(),
