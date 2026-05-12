@@ -11,8 +11,8 @@ import { db } from "../connection";
 import { votingCampaigns } from "../schema/exams";
 import { ulid } from "ulid";
 
-export const campaignExists = async (id: string) => !!(await getCampaignById(id));
-export const getCampaignById = async (id: string) =>
+export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
+export const getVotingCampaignById = async (id: string) =>
 	(await db.select().from(votingCampaigns).where(eq(votingCampaigns.id, id)))?.[0];
 
 export const getVotingCampaigns = async (

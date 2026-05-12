@@ -68,6 +68,18 @@ export type VotingTransactionInformationType = z.infer<typeof VotingTransactionI
 export const VotingCampaignOptions = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("random_select"),
+		order: z
+			.array(z.number())
+			.optional()
+			.transform((o) => o ?? []),
+		current: z
+			.number()
+			.optional()
+			.transform((n) => n ?? 0),
+		takenSeats: z
+			.array(z.number())
+			.optional()
+			.transform((o) => o ?? []),
 	}),
 	z.object({
 		type: z.literal("hungarian"),
@@ -210,4 +222,9 @@ export const [, RequestVotingTransactionResponse] = createApiSchema({
 		"campaignNotStarted",
 		"campaignStopped",
 	]),
+});
+
+export const [, GetVotingTransactionInformationResponse] = createApiSchema({
+	response: VotingTransactionInformation,
+	errors: z.enum(["invalidCampaignID", "invalidTransactionID", "invalidExamID", "invalidGroupID"]),
 });
