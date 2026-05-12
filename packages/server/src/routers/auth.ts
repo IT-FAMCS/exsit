@@ -12,6 +12,8 @@ import { zValidator } from "@/utils/hono";
 import { setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
+export type ExsitJwtPayload = { id: string; role: "student" | "admin" };
+
 export const requireAdminPermissions = createMiddleware<{ Variables: JwtVariables }>(
 	async (c, next) => {
 		const payload = c.get("jwtPayload");
@@ -54,10 +56,10 @@ export const authRouter = new Hono<{ Variables: JwtVariables }>()
 		return c.json(result);
 	})
 	.get("/me", async (c) => {
-		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
+		const payload = c.get("jwtPayload") as ExsitJwtPayload;
 		return c.json(await getAuthInfo(payload));
 	})
 	.patch("/me/change-password", zValidator("query", ChangePasswordRequest), async (c) => {
-		const payload = c.get("jwtPayload") as { id: string; role: "student" | "admin" };
+		const payload = c.get("jwtPayload") as ExsitJwtPayload;
 		return c.json(await changeUserPassword(payload, c.req.valid("query")));
 	});

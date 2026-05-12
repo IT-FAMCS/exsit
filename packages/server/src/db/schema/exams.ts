@@ -3,9 +3,9 @@ import {
 	CAMPAIGN_STATES,
 	MATERIALS_TAGS,
 	MATERIALS_TYPES,
-	SUPPORTED_CAMPAIGN_TYPES,
 	SupposedOrderType,
 	VoteType,
+	VotingCampaignOptionsType,
 } from "@exsit/shared/types/exams";
 import { groups, students } from "./users";
 
@@ -35,8 +35,8 @@ export const votingCampaigns = s.sqliteTable("voting_campaigns", {
 		.text()
 		.references(() => exams.id)
 		.notNull(),
-	type: s.text().$type<(typeof SUPPORTED_CAMPAIGN_TYPES)[number]>().notNull(),
 	state: s.text().$type<(typeof CAMPAIGN_STATES)[number]>().notNull(),
+	options: s.text({ mode: "json" }).$type<VotingCampaignOptionsType>().notNull(),
 });
 
 export const votes = s.sqliteTable(

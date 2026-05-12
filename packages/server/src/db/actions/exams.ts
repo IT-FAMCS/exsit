@@ -2,13 +2,9 @@ import {
 	MATERIALS_TAGS,
 	CreateExamRequest,
 	CreateExamResponse,
-	CreateVotingCampaignRequest,
-	CreateVotingCampaignResponse,
 	GetPreparationMaterialsResponse,
-	GetVotingCampaignsResponse,
 	RemovePreparationMaterialRequest,
 	RemovePreparationMaterialResponse,
-	RemoveVotingCampaignResponse,
 	UploadPreparationMaterialRequest,
 	UploadPreparationMaterialResponse,
 	GetExamsResponse,
@@ -16,7 +12,7 @@ import {
 } from "@exsit/shared/types/exams";
 import z from "zod";
 import { db } from "../connection";
-import { exams, preparationMaterials, votingCampaigns } from "../schema/exams";
+import { exams, preparationMaterials } from "../schema/exams";
 import { ulid } from "ulid";
 import { eq, and } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
@@ -125,53 +121,5 @@ export const removePreparationMaterial = async (
 		.delete(preparationMaterials)
 		.where(and(eq(preparationMaterials.exam, exam), eq(preparationMaterials.value, req.id)));
 	await removeFile(req.id);
-	return ok(null);
-};
-
-export const campaignExists = async (id: string) =>
-	!!(await db.select().from(votingCampaigns).where(eq(votingCampaigns.id, id)))?.[0];
-
-export const getVotingCampaigns = async (
-	exam: string,
-): Promise<z.input<typeof GetVotingCampaignsResponse>> => {
-	const campaigns = await db.select().from(votingCampaigns).where(eq(votingCampaigns.exam, exam));
-	return ok(Object.fromEntries(campaigns.map((c) => [c.id, { type: c.type, state: c.state }])));
-};
-
-export const createVotingCampaign = async (
-	exam: string,
-	req: z.infer<typeof CreateVotingCampaignRequest>,
-): Promise<z.input<typeof CreateVotingCampaignResponse>> => {
-	const exists = !!(
-		await db
-			.select()
-			.from(votingCampaigns)
-			.where(and(eq(votingCampaigns.type, req.type), eq(votingCampaigns.exam, exam)))
-	)?.[0];
-	if (exists) return { error: "alreadyExists" };
-	const id = `VC-${ulid()}`;
-	await db.insert(votingCampaigns).values({
-		id,
-		exam,
-		type: req.type,
-		state: "created",
-	});
-	return ok(id);
-};
-
-export const removeVotingCampaign = async (
-	campaign: string,
-): Promise<z.input<typeof RemoveVotingCampaignResponse>> => {
-	await db.delete(votingCampaigns).where(eq(votingCampaigns.id, campaign));
-	return ok(null);
-};
-
-export const startVotingCampaign = async (
-	campaign: string,
-): Promise<z.input<typeof RemoveVotingCampaignResponse>> => {
-	await db
-		.update(votingCampaigns)
-		.set({ state: "voting_started" })
-		.where(eq(votingCampaigns.id, campaign));
 	return ok(null);
 };

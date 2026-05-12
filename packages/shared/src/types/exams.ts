@@ -27,22 +27,64 @@ export type SupposedOrderType = z.infer<typeof SupposedOrder>;
 
 export const Vote = z.discriminatedUnion("campaignType", [
 	z.object({
-		campaignType: "exemption",
+		campaignType: z.literal("exemption"),
 	}),
 	z.object({
-		campaignType: "random_select",
+		campaignType: z.literal("random_select"),
 		seat: z.number(),
 	}),
 	z.object({
-		campaignType: "hungarian",
+		campaignType: z.literal("hungarian"),
 		topSeats: z.array(z.number()),
 	}),
 	z.object({
-		campaignType: "casino",
+		campaignType: z.literal("casino"),
 		distribution: z.record(z.number(), z.number()),
 	}),
 ]);
 export type VoteType = z.infer<typeof Vote>;
+
+export const VotingTransactionInformation = z.discriminatedUnion("campaignType", [
+	z.object({
+		campaignType: z.literal("random_select"),
+		group: z.record(z.string(), z.string()),
+		order: z.array(z.number()),
+		current: z.number(),
+		takenSeats: z.array(z.number()),
+	}),
+	z.object({
+		campaignType: z.literal("hungarian"),
+		total: z.number(),
+		pickAmount: z.number(),
+	}),
+	z.object({
+		campaignType: z.literal("casino"),
+		total: z.number(),
+		availablePoints: z.number(),
+	}),
+]);
+export type VotingTransactionInformationType = z.infer<typeof VotingTransactionInformation>;
+
+export const VotingCampaignOptions = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("random_select"),
+	}),
+	z.object({
+		type: z.literal("hungarian"),
+		pickAmount: z
+			.number()
+			.optional()
+			.transform((n) => n ?? 3),
+	}),
+	z.object({
+		type: z.literal("casino"),
+		availablePoints: z
+			.number()
+			.optional()
+			.transform((n) => n ?? 10),
+	}),
+]);
+export type VotingCampaignOptionsType = z.infer<typeof VotingCampaignOptions>;
 
 export const Exam = z.object({
 	subject: z.string(),
@@ -71,7 +113,7 @@ export const PreparationMaterials = z.array(PreparationMaterial);
 export type PreparationMaterialsType = z.infer<typeof PreparationMaterials>;
 
 export const VotingCampaign = z.object({
-	type: z.enum(SUPPORTED_CAMPAIGN_TYPES),
+	options: VotingCampaignOptions,
 	state: z.enum(CAMPAIGN_STATES),
 });
 export type VotingCampaignType = z.infer<typeof VotingCampaign>;
@@ -135,9 +177,7 @@ export const [GetVotingCampaignsRequest, GetVotingCampaignsResponse] = createApi
 });
 
 export const [CreateVotingCampaignRequest, CreateVotingCampaignResponse] = createApiSchema({
-	request: z.object({
-		type: z.enum(SUPPORTED_CAMPAIGN_TYPES),
-	}),
+	request: VotingCampaignOptions,
 	response: z.string(),
 	errors: z.enum(["invalidGroupCode", "invalidExamID", "alreadyExists"]),
 });
@@ -158,5 +198,16 @@ export const [CastVoteRequest, CastVoteResponse] = createApiSchema({
 		"invalidExamID",
 		"invalidCampaignID",
 		"mismatchedCampaignType",
+	]),
+});
+
+export const [, RequestVotingTransactionResponse] = createApiSchema({
+	response: z.string(),
+	errors: z.enum([
+		"invalidGroupCode",
+		"invalidCampaignID",
+		"adminsCannotVote",
+		"campaignNotStarted",
+		"campaignStopped",
 	]),
 });

@@ -20,6 +20,7 @@ import {
 	CreateAdminResponse,
 } from "@exsit/shared/types/admin";
 import { ulid } from "ulid";
+import { ExsitJwtPayload } from "@/routers/auth";
 
 export const tryLoginUser = async (
 	req: z.infer<typeof LoginRequest>,
@@ -108,10 +109,7 @@ export const addStudentsToGroup = async (
 };
 
 export const changeUserPassword = async (
-	payload: {
-		role: "student" | "admin";
-		id: string;
-	},
+	payload: ExsitJwtPayload,
 	req: z.infer<typeof ChangePasswordRequest>,
 ): Promise<z.infer<typeof ChangePasswordResponse>> => {
 	await db
@@ -121,10 +119,7 @@ export const changeUserPassword = async (
 	return ok(null);
 };
 
-export const getAuthInfo = async (payload: {
-	role: "student" | "admin";
-	id: string;
-}): Promise<z.infer<typeof MeResponse>> => {
+export const getAuthInfo = async (payload: ExsitJwtPayload): Promise<z.infer<typeof MeResponse>> => {
 	switch (payload.role) {
 		case "admin": {
 			const admin = await getAdminById(payload.id);

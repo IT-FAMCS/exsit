@@ -67,7 +67,7 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 	);
 }
 
-const CAMPAIGN_TYPES: Record<VotingCampaignType["type"], string> = {
+const CAMPAIGN_TYPES: Record<VotingCampaignType["options"]["type"], string> = {
 	casino: "Казино",
 	hungarian: "Венгерский алгоритм",
 	random_select: "Перемешанная выборка",
@@ -96,7 +96,7 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 				<Card.Header className="flex flex-row items-center gap-2">
 					<Icon width={32} icon="mdi:vote" />
 					<Card.Title className="text-start text-lg">
-						{CAMPAIGN_TYPES[props.campaign.type]}
+						{CAMPAIGN_TYPES[props.campaign.options.type]}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content className="text-muted flex w-full flex-row gap-2">

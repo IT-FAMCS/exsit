@@ -6,10 +6,13 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { except } from "hono/combine";
 import { jwt } from "hono/jwt";
+
 import { adminRouter } from "./routers/admins";
 import { groupRouter } from "./routers/groups";
 import { examRouter } from "./routers/exams";
 import { fileRouter } from "./routers/files";
+import { campaignsRouter } from "./routers/campaigns";
+import { votingRouter } from "./routers/voting";
 
 const app = new Hono()
 	.use(logger())
@@ -51,7 +54,9 @@ app
 	.route("/admins", adminRouter)
 	.route("/groups", groupRouter)
 	.route("/exams", examRouter)
-	.route("/files", fileRouter);
+	.route("/files", fileRouter)
+	.route("/campaigns", campaignsRouter)
+	.route("/voting", votingRouter);
 
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);

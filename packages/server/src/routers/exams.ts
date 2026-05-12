@@ -1,13 +1,8 @@
 import {
-	campaignExists,
-	createVotingCampaign,
 	examExists,
 	getExamById,
 	getPreparationMaterials,
-	getVotingCampaigns,
 	removePreparationMaterial,
-	removeVotingCampaign,
-	startVotingCampaign,
 	uploadPreparationMaterial,
 } from "@/db/actions/exams";
 import { requireExisting, zValidator } from "@/utils/hono";
@@ -24,9 +19,9 @@ import { except } from "hono/combine";
 import { JwtVariables } from "hono/jwt";
 import { ok } from "@exsit/shared/types/api";
 import z from "zod";
+import { getVotingCampaigns, createVotingCampaign } from "@/db/actions/campaigns";
 
 const requireExistingExam = requireExisting("id", "invalidExamID", examExists);
-const requireExistingCampaign = requireExisting("campaign", "invalidCampaignID", campaignExists);
 
 export const examRouter = new Hono<{ Variables: JwtVariables }>()
 	.use(
@@ -37,7 +32,6 @@ export const examRouter = new Hono<{ Variables: JwtVariables }>()
 		),
 	)
 	.use("/:id/*", requireExistingExam)
-	.use("/:id/campaigns/:campaign/*", requireExistingCampaign)
 
 	.get("/:id", async (c) => {
 		const exam = (await getExamById(c.req.param("id")))!;
@@ -62,10 +56,4 @@ export const examRouter = new Hono<{ Variables: JwtVariables }>()
 	.get("/:id/campaigns", async (c) => c.json(await getVotingCampaigns(c.req.param("id"))))
 	.post("/:id/create-campaign", zValidator("query", CreateVotingCampaignRequest), async (c) =>
 		c.json(await createVotingCampaign(c.req.param("id"), c.req.valid("query"))),
-	)
-	.patch("/:id/campaigns/:campaign/start", async (c) =>
-		c.json(await startVotingCampaign(c.req.param("campaign"))),
-	)
-	.delete("/:id/campaigns/:campaign/remove", async (c) =>
-		c.json(await removeVotingCampaign(c.req.param("campaign"))),
 	);
