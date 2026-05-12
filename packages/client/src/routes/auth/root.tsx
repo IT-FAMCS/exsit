@@ -17,10 +17,6 @@ export function AuthProvider() {
 	});
 	useEffect(() => {
 		if (location.pathname === "/login" || !data) return;
-		if (!data.ok) {
-			navigate("/login");
-			return;
-		}
 		defaultHandler(data, {
 			onError: () => navigate("/login"),
 			onSuccess: (info) => setUser(info),

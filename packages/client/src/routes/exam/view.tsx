@@ -81,14 +81,13 @@ const CAMPAIGN_STATES: Record<VotingCampaignType["state"], string> = {
 };
 
 function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
-	const params = useParams();
 	const navigate = useNavigate();
 
 	return (
 		<Pressable
 			onPress={
 				props.campaign.state !== "created" && props.campaign.state !== "voting_ended"
-					? () => navigate(`/exam/${params.exam}/vote/${props.id}`)
+					? () => navigate(`/vote/${props.id}`)
 					: undefined
 			}
 		>
@@ -237,9 +236,11 @@ export default function ViewExamDetailsRoute() {
 							</Tabs.List>
 						</Tabs.ListContainer>
 						<Tabs.Panel id="campaigns">
-							{Object.entries(examCampaigns ?? {}).map((kv) => (
-								<CampaignCard id={kv[0]} key={kv[0]} campaign={kv[1]} />
-							))}
+							<ScrollShadow className="flex max-h-[30dvh] flex-col gap-2">
+								{Object.entries(examCampaigns ?? {}).map((kv) => (
+									<CampaignCard id={kv[0]} key={kv[0]} campaign={kv[1]} />
+								))}
+							</ScrollShadow>
 						</Tabs.Panel>
 						<Tabs.Panel id="materials">
 							<ScrollShadow className="max-h-[30dvh]">

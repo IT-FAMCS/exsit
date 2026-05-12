@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
 				Component: ViewExamDetailsRoute,
 			},
 			{
-				path: "/exam/:exam/vote/:campaign",
+				path: "/vote/:campaign",
 				Component: VoteRoute,
 			},
 			{

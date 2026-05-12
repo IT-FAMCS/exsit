@@ -1,4 +1,3 @@
-import { router } from "@/main";
 import { type AnyAPIResponseSchema } from "@exsit/shared/types/api";
 import { toast } from "@heroui/react";
 import { z } from "zod";

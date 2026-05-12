@@ -1,9 +1,8 @@
 import z from "zod";
-import { getGroupById, getGroupByStudentId } from "./groups";
+import { getGroupByStudentId } from "./groups";
 import {
 	GetVotingTransactionInformationResponse,
 	RequestVotingTransactionResponse,
-	VotingTransactionInformation,
 } from "@exsit/shared/types/exams";
 import { decodeTime, ulid } from "ulid";
 import { db } from "../connection";
@@ -12,7 +11,6 @@ import { ok } from "@exsit/shared/types/api";
 import { ExsitJwtPayload } from "@/routers/auth";
 import { getVotingCampaignById } from "./campaigns";
 import { eq, and, inArray } from "drizzle-orm";
-import { getExamById } from "./exams";
 import { groups, students } from "../schema/users";
 
 export const cleanupStaleVotingTransacions = async () => {
@@ -77,7 +75,7 @@ export const getTransactionInformation = async (id: string) =>
 	await db.transaction(
 		async (tx): Promise<z.input<typeof GetVotingTransactionInformationResponse>> => {
 			const campaign = (
-				await db
+				await tx
 					.select()
 					.from(votingCampaigns)
 					.leftJoin(votingTransactions, eq(votingCampaigns.id, votingTransactions.votingCampaign))
@@ -86,7 +84,7 @@ export const getTransactionInformation = async (id: string) =>
 			if (!campaign) return { error: "invalidCampaignID" };
 
 			const groupStudents = (
-				await db
+				await tx
 					.select()
 					.from(students)
 					.leftJoin(groups, eq(students.group, groups.id))
@@ -104,9 +102,17 @@ export const getTransactionInformation = async (id: string) =>
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
 					});
 				case "hungarian":
-					//TODO
+					return ok({
+						campaignType: "hungarian",
+						pickAmount: campaign.options.pickAmount,
+						total: groupStudents.length,
+					});
 				case "casino":
-					//TODO
+					return ok({
+						campaignType: "casino",
+						availablePoints: campaign.options.availablePoints,
+						total: groupStudents.length,
+					});
 			}
 		},
 	);
