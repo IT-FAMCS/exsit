@@ -13,7 +13,7 @@ import { examRouter } from "./routers/exams";
 import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
-import { cleanupStaleVotingTransacions } from "./db/actions/transactions";
+import { cleanupStaleVotingTransactions } from "./db/actions/transactions";
 
 const app = new Hono()
 	.use(logger())
@@ -59,7 +59,7 @@ app
 	.route("/campaigns", campaignsRouter)
 	.route("/voting", votingRouter);
 
-setInterval(cleanupStaleVotingTransacions, 60 * 60 * 1000);
+setInterval(cleanupStaleVotingTransactions, 60 * 60 * 1000);
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);
 });

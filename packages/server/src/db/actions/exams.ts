@@ -64,9 +64,12 @@ export const getPreparationMaterials = async (
 		.filter((v) => v.type === "link")
 		.map(
 			(v) =>
-				({ type: "link", tag: v.tag ?? undefined, link: v.value }) satisfies z.input<
-					typeof PreparationMaterial
-				>,
+				({
+					type: "link",
+					tag: v.tag ?? undefined,
+					link: v.value,
+					title: v.title ?? undefined,
+				}) satisfies z.input<typeof PreparationMaterial>,
 		);
 
 	const rawMetadata = await getBatchFileMetadata({
@@ -81,6 +84,7 @@ export const getPreparationMaterials = async (
 				meta: kv[1],
 				id: kv[0],
 				tag: values.find((v) => v.value === kv[0])?.tag ?? undefined,
+				title: values.find((v) => v.value === kv[0])?.title ?? undefined,
 			}) satisfies z.input<typeof PreparationMaterial>,
 	);
 

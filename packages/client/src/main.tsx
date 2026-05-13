@@ -50,7 +50,9 @@ export const router = createBrowserRouter([
 	},
 ]);
 export const queryClient = new QueryClient({
-	defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 0, retry: false } },
+	defaultOptions: {
+		queries: { refetchOnWindowFocus: false, staleTime: 0, retry: false },
+	},
 });
 
 createRoot(document.getElementById("root")!).render(

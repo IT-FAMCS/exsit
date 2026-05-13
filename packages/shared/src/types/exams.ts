@@ -44,25 +44,31 @@ export const Vote = z.discriminatedUnion("campaignType", [
 ]);
 export type VoteType = z.infer<typeof Vote>;
 
-export const VotingTransactionInformation = z.discriminatedUnion("campaignType", [
-	z.object({
-		campaignType: z.literal("random_select"),
-		group: z.record(z.string(), z.string()),
-		order: z.array(z.number()),
-		current: z.number(),
-		takenSeats: z.array(z.number()),
-	}),
-	z.object({
-		campaignType: z.literal("hungarian"),
-		total: z.number(),
-		pickAmount: z.number(),
-	}),
-	z.object({
-		campaignType: z.literal("casino"),
-		total: z.number(),
-		availablePoints: z.number(),
-	}),
-]);
+export const VotingTransactionInformation = z
+	.discriminatedUnion("campaignType", [
+		z.object({
+			campaignType: z.literal("random_select"),
+			group: z.record(z.string(), z.string()),
+			order: z.array(z.number()),
+			current: z.number(),
+			takenSeats: z.array(z.number()),
+		}),
+		z.object({
+			campaignType: z.literal("hungarian"),
+			total: z.number(),
+			pickAmount: z.number(),
+		}),
+		z.object({
+			campaignType: z.literal("casino"),
+			total: z.number(),
+			availablePoints: z.number(),
+		}),
+	])
+	.and(
+		z.object({
+			supposedOrder: SupposedOrder,
+		}),
+	);
 export type VotingTransactionInformationType = z.infer<typeof VotingTransactionInformation>;
 
 export const VotingCampaignOptions = z.discriminatedUnion("type", [
@@ -107,19 +113,24 @@ export const Exam = z.object({
 });
 export type ExamType = z.infer<typeof Exam>;
 
-export const PreparationMaterial = z.discriminatedUnion("type", [
-	z.object({
-		type: z.literal("file"),
-		meta: FileMetadata,
-		id: z.string(),
-		tag: z.string().optional(),
-	}),
-	z.object({
-		type: z.literal("link"),
-		link: z.string(),
-		tag: z.string().optional(),
-	}),
-]);
+export const PreparationMaterial = z
+	.discriminatedUnion("type", [
+		z.object({
+			type: z.literal("file"),
+			meta: FileMetadata,
+			id: z.string(),
+		}),
+		z.object({
+			type: z.literal("link"),
+			link: z.string(),
+		}),
+	])
+	.and(
+		z.object({
+			tag: z.string().optional(),
+			title: z.string().optional(),
+		}),
+	);
 export type PreparationMaterialType = z.infer<typeof PreparationMaterial>;
 export const PreparationMaterials = z.array(PreparationMaterial);
 export type PreparationMaterialsType = z.infer<typeof PreparationMaterials>;
@@ -158,18 +169,23 @@ export const [GetPreparationMaterialsRequest, GetPreparationMaterialsResponse] =
 
 export const [UploadPreparationMaterialRequest, UploadPreparationMaterialResponse] =
 	createApiSchema({
-		request: z.discriminatedUnion("type", [
-			z.object({
-				type: z.literal("file"),
-				file: z.file(),
-				tag: z.enum(MATERIALS_TAGS).optional(),
-			}),
-			z.object({
-				type: z.literal("link"),
-				link: z.string(),
-				tag: z.enum(MATERIALS_TAGS).optional(),
-			}),
-		]),
+		request: z
+			.discriminatedUnion("type", [
+				z.object({
+					type: z.literal("file"),
+					file: z.file(),
+				}),
+				z.object({
+					type: z.literal("link"),
+					link: z.string(),
+				}),
+			])
+			.and(
+				z.object({
+					title: z.string().optional(),
+					tag: z.enum(MATERIALS_TAGS).optional(),
+				}),
+			),
 		response: z.null(),
 		errors: z.enum(["invalidGroupCode", "invalidExamID", "fileUploadFailed"]),
 	});
@@ -206,10 +222,11 @@ export const [CastVoteRequest, CastVoteResponse] = createApiSchema({
 	request: Vote,
 	response: z.null(),
 	errors: z.enum([
-		"invalidGroupCode",
+		"invalidGroupID",
 		"invalidExamID",
 		"invalidCampaignID",
-		"mismatchedCampaignType",
+		"invalidTransactionID",
+		"violatedConditions",
 	]),
 });
 
@@ -221,6 +238,7 @@ export const [, RequestVotingTransactionResponse] = createApiSchema({
 		"adminsCannotVote",
 		"campaignNotStarted",
 		"campaignStopped",
+		"alreadyVoted",
 	]),
 });
 

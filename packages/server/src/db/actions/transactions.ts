@@ -1,19 +1,22 @@
 import z from "zod";
-import { getGroupByStudentId } from "./groups";
+import { getGroupIdByStudent, getGroupSize } from "./groups";
 import {
+	CastVoteRequest,
+	CastVoteResponse,
 	GetVotingTransactionInformationResponse,
 	RequestVotingTransactionResponse,
+	VotingCampaignOptionsType,
 } from "@exsit/shared/types/exams";
 import { decodeTime, ulid } from "ulid";
 import { db } from "../connection";
-import { exams, votingCampaigns, votingTransactions } from "../schema/exams";
+import { exams, votes, votingCampaigns, votingTransactions } from "../schema/exams";
 import { ok } from "@exsit/shared/types/api";
 import { ExsitJwtPayload } from "@/routers/auth";
 import { getVotingCampaignById } from "./campaigns";
 import { eq, and, inArray } from "drizzle-orm";
 import { groups, students } from "../schema/users";
 
-export const cleanupStaleVotingTransacions = async () => {
+export const cleanupStaleVotingTransactions = async () => {
 	await db.transaction(async (tx) => {
 		const transactions = await tx.select().from(votingTransactions);
 		const staleTransactions = transactions.filter(
@@ -40,7 +43,7 @@ export const createVotingTransaction = async (
 	campaignId: string,
 ): Promise<z.input<typeof RequestVotingTransactionResponse>> => {
 	if (payload.role === "admin") return { error: "adminsCannotVote" };
-	const group = getGroupByStudentId(payload.id);
+	const group = getGroupIdByStudent(payload.id);
 	if (!group) return { error: "invalidGroupCode" };
 
 	const campaign = await getVotingCampaignById(campaignId);
@@ -49,24 +52,32 @@ export const createVotingTransaction = async (
 	else if (campaign.state === "voting_ended" || campaign.state === "finished")
 		return { error: "campaignStopped" };
 
-	const existing = (
+	const existingVote = (
+		await db
+			.select()
+			.from(votes)
+			.where(and(eq(votes.student, payload.id), eq(votes.campaign, campaignId)))
+	)?.at(0);
+	if (existingVote) return { error: "alreadyVoted" };
+
+	const existingTransaction = (
 		await db
 			.select()
 			.from(votingTransactions)
 			.where(
 				and(
 					eq(votingTransactions.student, payload.id),
-					eq(votingTransactions.votingCampaign, campaignId),
+					eq(votingTransactions.campaign, campaignId),
 				),
 			)
 	)?.at(0);
-	if (existing) return ok(existing.id);
+	if (existingTransaction) return ok(existingTransaction.id);
 
 	const id = `VT-${ulid()}`;
 	await db.insert(votingTransactions).values({
 		id,
 		student: payload.id,
-		votingCampaign: campaignId,
+		campaign: campaignId,
 	});
 	return ok(id);
 };
@@ -78,10 +89,15 @@ export const getTransactionInformation = async (id: string) =>
 				await tx
 					.select()
 					.from(votingCampaigns)
-					.leftJoin(votingTransactions, eq(votingCampaigns.id, votingTransactions.votingCampaign))
+					.leftJoin(votingTransactions, eq(votingCampaigns.id, votingTransactions.campaign))
 					.where(eq(votingTransactions.id, id))
 			)?.at(0)?.voting_campaigns;
 			if (!campaign) return { error: "invalidCampaignID" };
+
+			const supposedOrder = (await tx.select().from(exams).where(eq(exams.id, campaign.exam)))?.at(
+				0,
+			)?.supposedOrder;
+			if (!supposedOrder) return { error: "invalidExamID" };
 
 			const groupStudents = (
 				await tx
@@ -100,19 +116,88 @@ export const getTransactionInformation = async (id: string) =>
 						campaignType: "random_select",
 						...campaign.options,
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
+						supposedOrder,
 					});
 				case "hungarian":
 					return ok({
 						campaignType: "hungarian",
 						pickAmount: campaign.options.pickAmount,
 						total: groupStudents.length,
+						supposedOrder,
 					});
 				case "casino":
 					return ok({
 						campaignType: "casino",
 						availablePoints: campaign.options.availablePoints,
 						total: groupStudents.length,
+						supposedOrder,
 					});
 			}
 		},
 	);
+
+export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>) =>
+	await db.transaction(async (tx): Promise<z.input<typeof CastVoteResponse>> => {
+		const transaction = (await getVotingTransactionById(id))!;
+
+		const group = await getGroupIdByStudent(transaction.student);
+		if (!group) return { error: "invalidGroupID" };
+		const groupSize = (await getGroupSize(group)) ?? 0;
+
+		const campaign = await getVotingCampaignById(transaction.campaign);
+		if (!campaign) return { error: "invalidCampaignID" };
+		if (req.campaignType !== "exemption" && req.campaignType !== campaign.options.type)
+			return {
+				error: "violatedConditions",
+				details: `mismatched campaign type (${req.campaignType} and ${campaign.options.type})`,
+			};
+
+		switch (req.campaignType) {
+			case "random_select": {
+				const options = campaign.options as Extract<
+					VotingCampaignOptionsType,
+					{ type: "random_select" }
+				>;
+				// TODO check order
+				break;
+			}
+			case "hungarian": {
+				const options = campaign.options as Extract<
+					VotingCampaignOptionsType,
+					{ type: "hungarian" }
+				>;
+				if (req.topSeats.length !== options.pickAmount)
+					return {
+						error: "violatedConditions",
+						details: "picked seats amount doesn't match campaign settings",
+					};
+				if (req.topSeats.some((s) => s < 1 || s > groupSize))
+					return { error: "violatedConditions", details: "invalid seat numbers" };
+				break;
+			}
+			case "casino": {
+				const options = campaign.options as Extract<VotingCampaignOptionsType, { type: "casino" }>;
+				if (Object.keys(req.distribution).some((s) => Number(s) < 1 || Number(s) > groupSize))
+					return { error: "violatedConditions", details: "invalid seat numbers" };
+				const total = Object.values(req.distribution).reduce((acc, cur) => acc + cur, 0);
+				if (total !== options.availablePoints)
+					return {
+						error: "violatedConditions",
+						details: `points don't add up to the campaign's required value (${options.availablePoints})`,
+					};
+				break;
+			}
+			case "exemption":
+				break;
+		}
+
+		await tx.delete(votingTransactions).where(eq(votingTransactions.id, id));
+		await tx
+			.insert(votes)
+			.values({ student: transaction.student, vote: req, campaign: transaction.campaign });
+
+		if (campaign.options.type === "random_select") {
+			// TODO: update current
+		}
+		return ok(null);
+	});

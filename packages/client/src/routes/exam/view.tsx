@@ -13,9 +13,10 @@ import { Button, Card, Chip, Link, ScrollShadow, Separator, Spinner, Tabs } from
 import { Icon } from "@iconify/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import prettyBytes from "pretty-bytes";
 import { Pressable } from "react-aria-components";
+import Confetti from "react-confetti-boom";
 
 function MaterialsContainer(props: { title: string; materials: PreparationMaterialsType }) {
 	return (
@@ -108,7 +109,10 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 
 export default function ViewExamDetailsRoute() {
 	const params = useParams();
+	const location = useLocation();
 	const navigate = useNavigate();
+
+	const [celebrate, setCelebrate] = useState(false);
 
 	const [examDetails, setExamDetails] = useState<ExamType | undefined>(undefined);
 	const [examMaterials, setExamMaterials] = useState<PreparationMaterialsType | undefined>(
@@ -146,6 +150,17 @@ export default function ViewExamDetailsRoute() {
 				output: GetVotingCampaignsResponse,
 			}),
 	});
+
+	useEffect(() => {
+		if (location.pathname !== `/exam/${params.exam}`) {
+			setCelebrate(false);
+			return;
+		}
+		if (celebrate) return;
+		const hasKey = !!sessionStorage.getItem("celebrate");
+		setCelebrate(hasKey);
+		if (hasKey) queueMicrotask(() => sessionStorage.removeItem("celebrate"));
+	}, [location, celebrate, params]);
 
 	useEffect(() => {
 		if (!examDetailsFetch.data) return;
@@ -195,6 +210,10 @@ export default function ViewExamDetailsRoute() {
 		});
 	}, [examCampaignsFetch, navigate]);
 
+	useEffect(() => {
+		setExamCampaigns(undefined);
+	}, [location]);
+
 	if (!params.exam) {
 		navigate("/");
 		return null;
@@ -207,7 +226,7 @@ export default function ViewExamDetailsRoute() {
 		examCampaignsFetch.isFetching;
 
 	return (
-		<div className="flex h-dvh w-dvw flex-col items-center justify-center p-4">
+		<div className="relative flex h-dvh w-dvw flex-col items-center justify-center p-4">
 			{loading ? (
 				<Spinner />
 			) : (
@@ -236,10 +255,12 @@ export default function ViewExamDetailsRoute() {
 							</Tabs.List>
 						</Tabs.ListContainer>
 						<Tabs.Panel id="campaigns">
-							<ScrollShadow className="flex max-h-[30dvh] flex-col gap-2">
-								{Object.entries(examCampaigns ?? {}).map((kv) => (
-									<CampaignCard id={kv[0]} key={kv[0]} campaign={kv[1]} />
-								))}
+							<ScrollShadow className="max-h-[40dvh]">
+								<div className="flex flex-col gap-2">
+									{Object.entries(examCampaigns ?? {}).map((kv) => (
+										<CampaignCard id={kv[0]} key={kv[0]} campaign={kv[1]} />
+									))}
+								</div>
 							</ScrollShadow>
 						</Tabs.Panel>
 						<Tabs.Panel id="materials">
@@ -255,6 +276,19 @@ export default function ViewExamDetailsRoute() {
 						<Icon icon="mdi:chevron-left" /> На главную
 					</Button>
 				</div>
+			)}
+
+			{celebrate && (
+				<Confetti
+					className="pointer-events-none absolute h-dvh w-dvw"
+					mode="boom"
+					particleCount={50}
+					launchSpeed={2.5}
+					y={1}
+					x={0.5}
+					deg={270}
+					effectCount={1}
+				/>
 			)}
 		</div>
 	);

@@ -23,7 +23,8 @@ export const exams = s.sqliteTable("exams", {
 });
 
 export const preparationMaterials = s.sqliteTable("preparation_materials", {
-	exam: s.text(),
+	exam: s.text().notNull(),
+	title: s.text(),
 	value: s.text().notNull(),
 	tag: s.text().$type<(typeof MATERIALS_TAGS)[number]>(),
 	type: s.text().$type<(typeof MATERIALS_TYPES)[number]>().notNull(),
@@ -42,11 +43,11 @@ export const votingCampaigns = s.sqliteTable("voting_campaigns", {
 export const votes = s.sqliteTable(
 	"votes",
 	{
-		user: s.text(),
+		student: s.text(),
 		campaign: s.text(),
 		vote: s.text({ mode: "json" }).$type<VoteType>().notNull(),
 	},
-	(t) => [s.primaryKey({ columns: [t.user, t.campaign] })],
+	(t) => [s.primaryKey({ columns: [t.student, t.campaign] })],
 );
 
 export const votingTransactions = s.sqliteTable("voting_transactions", {
@@ -55,7 +56,7 @@ export const votingTransactions = s.sqliteTable("voting_transactions", {
 		.text()
 		.notNull()
 		.references(() => students.id),
-	votingCampaign: s
+	campaign: s
 		.text()
 		.notNull()
 		.references(() => votingCampaigns.id),

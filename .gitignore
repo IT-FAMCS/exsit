@@ -6,3 +6,4 @@ out
 *.log*
 .env
 packages/server/data.db
+*.tsbuildinfo
