@@ -4,7 +4,7 @@ import { FileMetadata } from "./files";
 
 export const MATERIALS_TAGS = ["questions"] as const;
 export const MATERIALS_TYPES = ["file", "link"] as const;
-export const CAMPAIGN_STATES = ["created", "voting_started", "voting_ended", "finished"] as const;
+export const CAMPAIGN_STATUSES = ["created", "voting_started", "voting_ended", "finished"] as const;
 export const SUPPORTED_CAMPAIGN_TYPES = ["random_select", "hungarian", "casino"] as const;
 
 export const SupposedOrder = z.discriminatedUnion("type", [
@@ -71,21 +71,26 @@ export const VotingTransactionInformation = z
 	);
 export type VotingTransactionInformationType = z.infer<typeof VotingTransactionInformation>;
 
+export const VotingCampaignState = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("random_select"),
+		order: z.array(z.number()),
+		current: z.number(),
+	}),
+	z.object({
+		type: z.literal("hungarian"),
+	}),
+	z.object({
+		type: z.literal("casino"),
+		round: z.number(),
+		distribution: z.record(z.string(), z.record(z.number(), z.number())),
+	}),
+]);
+export type VotingCampaignStateType = z.infer<typeof VotingCampaignState>;
+
 export const VotingCampaignOptions = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("random_select"),
-		order: z
-			.array(z.number())
-			.optional()
-			.transform((o) => o ?? []),
-		current: z
-			.number()
-			.optional()
-			.transform((n) => n ?? 0),
-		takenSeats: z
-			.array(z.number())
-			.optional()
-			.transform((o) => o ?? []),
 	}),
 	z.object({
 		type: z.literal("hungarian"),
@@ -137,7 +142,7 @@ export type PreparationMaterialsType = z.infer<typeof PreparationMaterials>;
 
 export const VotingCampaign = z.object({
 	options: VotingCampaignOptions,
-	state: z.enum(CAMPAIGN_STATES),
+	status: z.enum(CAMPAIGN_STATUSES),
 });
 export type VotingCampaignType = z.infer<typeof VotingCampaign>;
 export const VotingCampaigns = z.record(z.string(), VotingCampaign);
@@ -200,8 +205,18 @@ export const [RemovePreparationMaterialRequest, RemovePreparationMaterialRespons
 	});
 
 export const [GetVotingCampaignsRequest, GetVotingCampaignsResponse] = createApiSchema({
-	response: z.record(z.string(), VotingCampaign),
-	errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+	response: z.record(
+		z.string(),
+		VotingCampaign.extend(
+			z.object({
+				started: z.coerce.date<string>().optional(),
+				stopped: z.coerce.date<string>().optional(),
+				voted: z.number(),
+				total: z.number(),
+			}).shape,
+		),
+	),
+	errors: z.enum(["invalidGroupCode", "invalidExamID", "failedToGetStatistics"]),
 });
 
 export const [CreateVotingCampaignRequest, CreateVotingCampaignResponse] = createApiSchema({

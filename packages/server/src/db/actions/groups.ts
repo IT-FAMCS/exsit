@@ -3,8 +3,9 @@ import { z } from "zod";
 import { ulid } from "ulid";
 import { db } from "../connection";
 import { groups, students } from "../schema/users";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { ok } from "@exsit/shared/types/api";
+import { exams } from "../schema/exams";
 
 export const groupExists = async (code: string) => !!(await getGroupById(code));
 export const getGroupByPublicCode = async (code: string) =>
@@ -19,11 +20,16 @@ export const getGroupIdByStudent = async (student: string) =>
 			.where(eq(students.id, student))
 			.limit(1)
 	)?.at(0)?.group;
-export const getGroupSize = async (group: string) =>
+export const getGroupIdByExam = async (exam: string) =>
+	(await db.select({ group: exams.group }).from(exams).where(eq(exams.id, exam)).limit(1))?.at(0)
+		?.group;
+
+export const getGroupStudents = async (group: string) =>
 	(await groupExists(group))
-		? (await db.select({ count: count() }).from(students).where(eq(students.group, group)))?.at(0)
-				?.count
+		? await db.select().from(students).where(eq(students.group, group))
 		: undefined;
+export const getGroupSize = async (group: string) =>
+	(await getGroupStudents(group))?.length ?? undefined;
 
 export const createGroup = async (
 	req: z.infer<typeof CreateGroupRequest>,

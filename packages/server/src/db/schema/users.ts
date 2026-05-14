@@ -20,7 +20,7 @@ export const students = s.sqliteTable("students", {
 	group: s
 		.text()
 		.notNull()
-		.references(() => groups.id),
+		.references(() => groups.id, { onDelete: "cascade" }),
 	passwordHash: s.text().notNull(),
 });
 

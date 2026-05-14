@@ -74,7 +74,7 @@ const CAMPAIGN_TYPES: Record<VotingCampaignType["options"]["type"], string> = {
 	random_select: "Перемешанная выборка",
 };
 
-const CAMPAIGN_STATES: Record<VotingCampaignType["state"], string> = {
+const CAMPAIGN_STATUSES: Record<VotingCampaignType["status"], string> = {
 	created: "Голосование создано. Ожидай начала",
 	finished: "Голосование Завершено. Можно посмотреть результаты",
 	voting_ended: "Голосование окончено. Ожидай подсчёта результатов",
@@ -87,7 +87,7 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 	return (
 		<Pressable
 			onPress={
-				props.campaign.state !== "created" && props.campaign.state !== "voting_ended"
+				props.campaign.status !== "created" && props.campaign.status !== "voting_ended"
 					? () => navigate(`/vote/${props.id}`)
 					: undefined
 			}
@@ -100,7 +100,7 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 					</Card.Title>
 				</Card.Header>
 				<Card.Content className="text-muted flex w-full flex-row gap-2">
-					<p>{CAMPAIGN_STATES[props.campaign.state]}</p>
+					<p>{CAMPAIGN_STATUSES[props.campaign.status]}</p>
 				</Card.Content>
 			</Card>
 		</Pressable>
@@ -204,6 +204,7 @@ export default function ViewExamDetailsRoute() {
 			errorMessages: {
 				invalidExamID: "Неверный ID экзамена",
 				invalidGroupCode: "Неверный код группы",
+				failedToGetStatistics: "Не удалось получить статистику голосований",
 			},
 			onError: () => navigate("/"),
 			onSuccess: (data) => setExamCampaigns(data),

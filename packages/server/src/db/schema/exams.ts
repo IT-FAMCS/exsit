@@ -1,11 +1,12 @@
 import * as s from "drizzle-orm/sqlite-core";
 import {
-	CAMPAIGN_STATES,
+	CAMPAIGN_STATUSES,
 	MATERIALS_TAGS,
 	MATERIALS_TYPES,
 	SupposedOrderType,
 	VoteType,
 	VotingCampaignOptionsType,
+	VotingCampaignStateType,
 } from "@exsit/shared/types/exams";
 import { groups, students } from "./users";
 
@@ -13,7 +14,7 @@ export const exams = s.sqliteTable("exams", {
 	id: s.text().primaryKey(),
 	group: s
 		.text()
-		.references(() => groups.id)
+		.references(() => groups.id, { onDelete: "cascade" })
 		.notNull(),
 	subject: s.text().notNull(),
 	date: s.integer({ mode: "timestamp_ms" }),
@@ -23,7 +24,10 @@ export const exams = s.sqliteTable("exams", {
 });
 
 export const preparationMaterials = s.sqliteTable("preparation_materials", {
-	exam: s.text().notNull(),
+	exam: s
+		.text()
+		.notNull()
+		.references(() => exams.id, { onDelete: "cascade" }),
 	title: s.text(),
 	value: s.text().notNull(),
 	tag: s.text().$type<(typeof MATERIALS_TAGS)[number]>(),
@@ -34,17 +38,20 @@ export const votingCampaigns = s.sqliteTable("voting_campaigns", {
 	id: s.text().primaryKey(),
 	exam: s
 		.text()
-		.references(() => exams.id)
+		.references(() => exams.id, { onDelete: "cascade" })
 		.notNull(),
-	state: s.text().$type<(typeof CAMPAIGN_STATES)[number]>().notNull(),
+	status: s.text().$type<(typeof CAMPAIGN_STATUSES)[number]>().notNull(),
 	options: s.text({ mode: "json" }).$type<VotingCampaignOptionsType>().notNull(),
+	state: s.text({ mode: "json" }).$type<VotingCampaignStateType>().notNull(),
+	started: s.integer({ mode: "timestamp_ms" }),
+	stopped: s.integer({ mode: "timestamp_ms" }),
 });
 
 export const votes = s.sqliteTable(
 	"votes",
 	{
-		student: s.text(),
-		campaign: s.text(),
+		student: s.text().references(() => students.id, { onDelete: "cascade" }),
+		campaign: s.text().references(() => votingCampaigns.id, { onDelete: "cascade" }),
 		vote: s.text({ mode: "json" }).$type<VoteType>().notNull(),
 	},
 	(t) => [s.primaryKey({ columns: [t.student, t.campaign] })],
@@ -55,9 +62,9 @@ export const votingTransactions = s.sqliteTable("voting_transactions", {
 	student: s
 		.text()
 		.notNull()
-		.references(() => students.id),
+		.references(() => students.id, { onDelete: "cascade" }),
 	campaign: s
 		.text()
 		.notNull()
-		.references(() => votingCampaigns.id),
+		.references(() => votingCampaigns.id, { onDelete: "cascade" }),
 });

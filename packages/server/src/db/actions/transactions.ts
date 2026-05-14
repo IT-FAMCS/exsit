@@ -1,11 +1,13 @@
 import z from "zod";
-import { getGroupIdByStudent, getGroupSize } from "./groups";
+import { getGroupIdByStudent, getGroupStudents } from "./groups";
 import {
 	CastVoteRequest,
 	CastVoteResponse,
 	GetVotingTransactionInformationResponse,
 	RequestVotingTransactionResponse,
+	VoteType,
 	VotingCampaignOptionsType,
+	VotingCampaignStateType,
 } from "@exsit/shared/types/exams";
 import { decodeTime, ulid } from "ulid";
 import { db } from "../connection";
@@ -48,8 +50,8 @@ export const createVotingTransaction = async (
 
 	const campaign = await getVotingCampaignById(campaignId);
 	if (!campaign) return { error: "invalidCampaignID" };
-	if (campaign.state === "created") return { error: "campaignNotStarted" };
-	else if (campaign.state === "voting_ended" || campaign.state === "finished")
+	if (campaign.status === "created") return { error: "campaignNotStarted" };
+	else if (campaign.status === "voting_ended" || campaign.status === "finished")
 		return { error: "campaignStopped" };
 
 	const existingVote = (
@@ -111,13 +113,23 @@ export const getTransactionInformation = async (id: string) =>
 			if (!students) return { error: "invalidGroupID" };
 
 			switch (campaign.options.type) {
-				case "random_select":
+				case "random_select": {
+					const state = campaign.state as Extract<
+						VotingCampaignStateType,
+						{ type: "random_select" }
+					>;
+					const takenSeats = (
+						await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
+					).map((s) => (s.vote as Extract<VoteType, { campaignType: "random_select" }>).seat);
+
 					return ok({
 						campaignType: "random_select",
-						...campaign.options,
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
 						supposedOrder,
+						takenSeats,
+						...state,
 					});
+				}
 				case "hungarian":
 					return ok({
 						campaignType: "hungarian",
@@ -142,7 +154,7 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 
 		const group = await getGroupIdByStudent(transaction.student);
 		if (!group) return { error: "invalidGroupID" };
-		const groupSize = (await getGroupSize(group)) ?? 0;
+		const students = (await getGroupStudents(group))!;
 
 		const campaign = await getVotingCampaignById(transaction.campaign);
 		if (!campaign) return { error: "invalidCampaignID" };
@@ -154,11 +166,27 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 
 		switch (req.campaignType) {
 			case "random_select": {
-				const options = campaign.options as Extract<
-					VotingCampaignOptionsType,
-					{ type: "random_select" }
-				>;
-				// TODO check order
+				const state = campaign.state as Extract<VotingCampaignStateType, { type: "random_select" }>;
+				const currentStudent = students.at(state.order[state.current]);
+				if (!currentStudent)
+					return {
+						error: "internal",
+						details: "campaign state is corrupted (invalid order/current)",
+					};
+				if (currentStudent.id !== transaction.student)
+					return { error: "violatedConditions", details: "it's not your turn to vote" };
+				if (req.seat < 1 || req.seat > students.length)
+					return { error: "violatedConditions", details: "invalid seat number" };
+
+				// update current
+				if (state.current === students.length - 1) {
+					console.warn("FINISH random_select CAMPAIGN");
+					// TODO: FINISH CAMPAIGN
+				} else
+					await tx
+						.update(votingCampaigns)
+						.set({ state: { ...state, current: state.current + 1 } })
+						.where(eq(votingCampaigns.id, transaction.campaign));
 				break;
 			}
 			case "hungarian": {
@@ -171,13 +199,13 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 						error: "violatedConditions",
 						details: "picked seats amount doesn't match campaign settings",
 					};
-				if (req.topSeats.some((s) => s < 1 || s > groupSize))
+				if (req.topSeats.some((s) => s < 1 || s > students.length))
 					return { error: "violatedConditions", details: "invalid seat numbers" };
 				break;
 			}
 			case "casino": {
 				const options = campaign.options as Extract<VotingCampaignOptionsType, { type: "casino" }>;
-				if (Object.keys(req.distribution).some((s) => Number(s) < 1 || Number(s) > groupSize))
+				if (Object.keys(req.distribution).some((s) => Number(s) < 1 || Number(s) > students.length))
 					return { error: "violatedConditions", details: "invalid seat numbers" };
 				const total = Object.values(req.distribution).reduce((acc, cur) => acc + cur, 0);
 				if (total !== options.availablePoints)
@@ -195,9 +223,5 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 		await tx
 			.insert(votes)
 			.values({ student: transaction.student, vote: req, campaign: transaction.campaign });
-
-		if (campaign.options.type === "random_select") {
-			// TODO: update current
-		}
 		return ok(null);
 	});

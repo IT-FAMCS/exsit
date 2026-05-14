@@ -1,4 +1,6 @@
 import HungarianAlgorithmChooser from "@/components/voting/HungarianAlgorithmChooser";
+import RandomSelectAlgorithmChooser from "@/components/voting/RandomSelectAlgorithmChooser";
+import { LoadingWall } from "@/components/Walls";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
 import {
 	CastVoteResponse,
@@ -7,19 +9,10 @@ import {
 	type VoteType,
 	type VotingTransactionInformationType,
 } from "@exsit/shared/types/exams";
-import { Spinner, toast } from "@heroui/react";
+import { toast } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-
-function LoadingWall(props: { text?: string }) {
-	return (
-		<div className="flex h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
-			<Spinner />
-			{props.text && <p className="text-muted text-center">{props.text}</p>}
-		</div>
-	);
-}
 
 export default function VoteRoute() {
 	const navigate = useNavigate();
@@ -129,6 +122,9 @@ export default function VoteRoute() {
 			<div className="relative flex h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
 				{transactionInfo?.campaignType === "hungarian" && (
 					<HungarianAlgorithmChooser info={transactionInfo} onCast={setVote} />
+				)}
+				{transactionInfo?.campaignType === "random_select" && (
+					<RandomSelectAlgorithmChooser info={transactionInfo} onCast={setVote} />
 				)}
 				<p className="text-muted pointer-events-none absolute right-4 bottom-4">
 					{transactionToken}
