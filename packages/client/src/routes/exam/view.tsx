@@ -169,7 +169,7 @@ export default function ViewExamDetailsRoute() {
 				invalidExamID: "Неверный ID экзамена",
 				invalidGroupCode: "Неверный код группы",
 			},
-			onError: () => navigate("/"),
+			onApiError: () => navigate("/"),
 			onSuccess: (data) => setExamDetails(data),
 		});
 	}, [examDetailsFetch, navigate]);
@@ -206,7 +206,7 @@ export default function ViewExamDetailsRoute() {
 				invalidGroupCode: "Неверный код группы",
 				failedToGetStatistics: "Не удалось получить статистику голосований",
 			},
-			onError: () => navigate("/"),
+			onApiError: () => navigate("/"),
 			onSuccess: (data) => setExamCampaigns(data),
 		});
 	}, [examCampaignsFetch, navigate]);

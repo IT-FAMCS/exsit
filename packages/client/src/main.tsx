@@ -12,6 +12,7 @@ import MainRoute from "./routes/main";
 import OnboardingRoute from "./routes/auth/onboarding";
 import ViewExamDetailsRoute from "./routes/exam/view";
 import VoteRoute from "./routes/exam/vote";
+import QuickLoginRoute from "./routes/auth/quick-login";
 
 export const router = createBrowserRouter([
 	{
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
 			{
 				path: "/login",
 				Component: LoginRoute,
+			},
+			{
+				path: "/ql",
+				Component: QuickLoginRoute
 			},
 			{
 				path: "/onboarding",

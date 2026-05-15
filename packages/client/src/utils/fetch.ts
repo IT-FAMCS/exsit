@@ -14,7 +14,8 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 	result: ExpandedFetchResult<TOut>,
 	options: {
 		onSuccess?: (data: SchemaDataType<TOut>) => void;
-		onError?: (code: SchemaErrorsType<TOut>) => void;
+		onApiError?: (code: SchemaErrorsType<TOut>) => void;
+		onFetchError?: (type: "fetch" | "malformed_response") => void;
 		showToast?: boolean;
 		errorMessages?: Record<Exclude<SchemaErrorsType<TOut>, "validation" | "internal">, string>;
 	},
@@ -31,12 +32,14 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 				toast.danger("Не удалось установить соединение с сервером", {
 					description: `${result.exception}`,
 				});
+			options.onFetchError?.("fetch");
 			return;
 		case "malformed_response":
 			if (options.showToast ?? true)
 				toast.danger("Сервер вернул ответ в неправильном формате", {
 					description: z.prettifyError(result.parseErrors),
 				});
+			options.onFetchError?.("malformed_response");
 			return;
 		case "api":
 			if ((options.showToast ?? true) && options.errorMessages)
@@ -49,7 +52,7 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 						} as Record<SchemaErrorsType<TOut>, string>
 					)[result.code],
 				);
-			options.onError?.(result.code);
+			options.onApiError?.(result.code);
 			return;
 	}
 };

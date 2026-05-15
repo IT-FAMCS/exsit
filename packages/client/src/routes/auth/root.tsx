@@ -16,9 +16,9 @@ export function AuthProvider() {
 		queryFn: async () => await expandedFetch("/me", { output: MeResponse }),
 	});
 	useEffect(() => {
-		if (location.pathname === "/login" || !data) return;
+		if (["/login", "/ql"].includes(location.pathname) || !data) return;
 		defaultHandler(data, {
-			onError: () => navigate("/login"),
+			onFetchError: () => navigate("/login"),
 			onSuccess: (info) => setUser(info),
 		});
 	}, [data, location, navigate]);

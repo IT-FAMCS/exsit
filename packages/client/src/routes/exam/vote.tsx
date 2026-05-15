@@ -57,7 +57,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!requestVotingTransactionFetch.data) return;
 		defaultHandler(requestVotingTransactionFetch.data, {
-			onError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate(-1)),
 			errorMessages: {
 				adminsCannotVote: "Администратор не может участвовать в голосовании!",
 				campaignNotStarted: "Голосование не начато!",
@@ -73,7 +73,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!getVotingTransactionInfoFetch.data) return;
 		defaultHandler(getVotingTransactionInfoFetch.data, {
-			onError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate(-1)),
 			errorMessages: {
 				invalidCampaignID: "Неверный ID голосования",
 				invalidExamID: "Неверный ID экзамена",
@@ -87,7 +87,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!castVoteFetch.data) return;
 		defaultHandler(castVoteFetch.data, {
-			onError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate(-1)),
 			errorMessages: {
 				invalidCampaignID: "Неверный ID голосования",
 				invalidExamID: "Неверный ID экзамена",
