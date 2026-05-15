@@ -178,6 +178,12 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				if (req.seat < 1 || req.seat > students.length)
 					return { error: "violatedConditions", details: "invalid seat number" };
 
+				const takenSeats = (
+					await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
+				).map((s) => (s.vote as Extract<VoteType, { campaignType: "random_select" }>).seat);
+				if (takenSeats.includes(req.seat))
+					return { error: "violatedConditions", details: "seat is taken" };
+
 				// update current
 				if (state.current === students.length - 1) {
 					console.warn("FINISH random_select CAMPAIGN");
