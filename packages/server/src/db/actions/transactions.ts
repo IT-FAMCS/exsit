@@ -134,14 +134,14 @@ export const getTransactionInformation = async (id: string) =>
 					return ok({
 						campaignType: "hungarian",
 						pickAmount: campaign.options.pickAmount,
-						total: groupStudents.length,
+						groupSize: groupStudents.length,
 						supposedOrder,
 					});
 				case "casino":
 					return ok({
 						campaignType: "casino",
 						availablePoints: campaign.options.availablePoints,
-						total: groupStudents.length,
+						groupSize: groupStudents.length,
 						supposedOrder,
 					});
 			}

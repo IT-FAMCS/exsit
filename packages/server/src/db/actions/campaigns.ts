@@ -64,6 +64,8 @@ const getInitialState = (
 			return { type: "hungarian" };
 		case "casino":
 			return { type: "casino", distribution: {}, round: 1 };
+		case "ttc":
+			return { type: "ttc", seats: {}, state: "select" };
 	}
 };
 

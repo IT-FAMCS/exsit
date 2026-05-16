@@ -72,6 +72,7 @@ const CAMPAIGN_TYPES: Record<VotingCampaignType["options"]["type"], string> = {
 	casino: "Казино",
 	hungarian: "Венгерский алгоритм",
 	random_select: "Перемешанная выборка",
+	ttc: "Высший торговый цикл"
 };
 
 const CAMPAIGN_STATUSES: Record<VotingCampaignType["status"], string> = {

@@ -29,7 +29,7 @@ export default function HungarianAlgorithmChooser(props: {
 				}}
 			>
 				<TagGroup.List className="justify-center">
-					{Array.from({ length: props.info.total }, (_, i) => i + 1).map((num) => (
+					{Array.from({ length: props.info.groupSize }, (_, i) => i + 1).map((num) => (
 						<Tag
 							className="aspect-square w-12 justify-center p-4"
 							id={num}

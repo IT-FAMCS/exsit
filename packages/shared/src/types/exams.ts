@@ -5,7 +5,7 @@ import { FileMetadata } from "./files";
 export const MATERIALS_TAGS = ["questions"] as const;
 export const MATERIALS_TYPES = ["file", "link"] as const;
 export const CAMPAIGN_STATUSES = ["created", "voting_started", "voting_ended", "finished"] as const;
-export const SUPPORTED_CAMPAIGN_TYPES = ["random_select", "hungarian", "casino"] as const;
+export const SUPPORTED_CAMPAIGN_TYPES = ["random_select", "hungarian", "casino", "ttc"] as const;
 
 export const SupposedOrder = z.discriminatedUnion("type", [
 	z.object({
@@ -41,6 +41,10 @@ export const Vote = z.discriminatedUnion("campaignType", [
 		campaignType: z.literal("casino"),
 		distribution: z.record(z.number(), z.number()),
 	}),
+	z.object({
+		campaignType: z.literal("ttc"),
+		preferred: z.number().nullable(),
+	}),
 ]);
 export type VoteType = z.infer<typeof Vote>;
 
@@ -55,13 +59,21 @@ export const VotingTransactionInformation = z
 		}),
 		z.object({
 			campaignType: z.literal("hungarian"),
-			total: z.number(),
+			groupSize: z.number(),
 			pickAmount: z.number(),
 		}),
 		z.object({
 			campaignType: z.literal("casino"),
-			total: z.number(),
+			groupSize: z.number(),
+			totalRounds: z.number(),
 			availablePoints: z.number(),
+			distribution: z.record(z.number(), z.object({ amount: z.number(), max: z.number() })),
+		}),
+		z.object({
+			campaignType: z.literal("ttc"),
+			assignedSeat: z.number(),
+			state: z.enum(["satisfied", "select"]),
+			takenSeats: z.array(z.number()),
 		}),
 	])
 	.and(
@@ -85,6 +97,11 @@ export const VotingCampaignState = z.discriminatedUnion("type", [
 		round: z.number(),
 		distribution: z.record(z.string(), z.record(z.number(), z.number())),
 	}),
+	z.object({
+		type: z.literal("ttc"),
+		state: z.enum(["satisfied", "select"]),
+		seats: z.record(z.number(), z.number()),
+	}),
 ]);
 export type VotingCampaignStateType = z.infer<typeof VotingCampaignState>;
 
@@ -105,6 +122,9 @@ export const VotingCampaignOptions = z.discriminatedUnion("type", [
 			.number()
 			.optional()
 			.transform((n) => n ?? 10),
+	}),
+	z.object({
+		type: z.literal("ttc"),
 	}),
 ]);
 export type VotingCampaignOptionsType = z.infer<typeof VotingCampaignOptions>;
