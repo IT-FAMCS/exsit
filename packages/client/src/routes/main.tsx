@@ -1,5 +1,5 @@
 import Logo from "@/components/Logo";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
 import { GetExamsResponse, type ExamType } from "@exsit/shared/types/exams";
 import { Card, Chip, Kbd, Link, Separator, Tabs } from "@heroui/react";

@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import type { VotingTransactionInformationType, VoteType } from "@exsit/shared/types/exams";
 import { useNavigate } from "react-router";
 import { ErrorWall } from "@/components/Walls";
@@ -50,7 +50,11 @@ export default function RandomSelectAlgorithmChooser(props: {
 					>
 						<TagGroup.List className="justify-center">
 							{Array.from({ length: groupArray.length }, (_, i) => i + 1).map((num) => (
-								<Tag className="aspect-square w-12 justify-center p-4" id={num}>
+								<Tag
+									isDisabled={props.info.takenSeats.includes(num)}
+									className="aspect-square w-12 justify-center p-4"
+									id={num}
+								>
 									{num}
 								</Tag>
 							))}

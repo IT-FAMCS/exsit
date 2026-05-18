@@ -123,11 +123,11 @@ export const getTransactionInformation = async (id: string) =>
 					).map((s) => (s.vote as Extract<VoteType, { campaignType: "random_select" }>).seat);
 
 					return ok({
+						...state,
 						campaignType: "random_select",
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
 						supposedOrder,
 						takenSeats,
-						...state,
 					});
 				}
 				case "hungarian":

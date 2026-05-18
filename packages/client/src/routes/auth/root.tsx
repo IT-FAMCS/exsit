@@ -1,4 +1,4 @@
-import { AuthContext, useAuth } from "@/hooks/useAuth";
+import { AuthContext, useAuth } from "@/hooks/use-auth";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
 import { MeResponse, type AuthInformation } from "@exsit/shared/types/auth";
 import { Spinner } from "@heroui/react";

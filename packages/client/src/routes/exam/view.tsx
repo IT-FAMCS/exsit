@@ -38,7 +38,9 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 						<div className="flex w-full flex-row justify-between">
 							<div className="flex flex-col gap-4">
 								<Card.Header className="*:text-start">
-									<Card.Title>{m.type === "file" ? m.meta.filename : m.link}</Card.Title>
+									<Card.Title>
+										{m.title ?? (m.type === "file" ? m.meta.filename : m.link)}
+									</Card.Title>
 									{m.type === "file" && (
 										<Card.Description>
 											{prettyBytes(m.meta.size, { locale: "ru" })}
@@ -72,7 +74,7 @@ const CAMPAIGN_TYPES: Record<VotingCampaignType["options"]["type"], string> = {
 	casino: "Казино",
 	hungarian: "Венгерский алгоритм",
 	random_select: "Перемешанная выборка",
-	ttc: "Высший торговый цикл"
+	ttc: "Высший торговый цикл",
 };
 
 const CAMPAIGN_STATUSES: Record<VotingCampaignType["status"], string> = {
