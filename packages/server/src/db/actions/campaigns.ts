@@ -16,7 +16,7 @@ import { votes, votingCampaigns } from "../schema/exams";
 import { ulid } from "ulid";
 import { getGroupIdByExam, getGroupSize } from "./groups";
 import { shuffleArray } from "@/utils/math";
-import { sendVotingCampaignStartedMessage } from "@/bot";
+import { sendVotingCampaignStartedMessage, sendVotingCampaignStoppedMessage } from "@/bot";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
 export const getVotingCampaignById = async (id: string) =>
@@ -143,6 +143,6 @@ export const stopVotingCampaign = async (
 		.where(eq(votingCampaigns.id, campaignId));
 
 	const campaign = (await getVotingCampaignById(campaignId))!;
-	await sendVotingCampaignStartedMessage(campaign);
+	await sendVotingCampaignStoppedMessage(campaign);
 	return ok(null);
 };

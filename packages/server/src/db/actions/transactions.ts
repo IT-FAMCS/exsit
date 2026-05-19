@@ -152,8 +152,12 @@ export const getTransactionInformation = async (id: string) =>
 		},
 	);
 
-export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>) =>
-	await db.transaction(async (tx): Promise<z.input<typeof CastVoteResponse>> => {
+export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>) => {
+	const extra: {
+		stopCampaign?: string;
+	} = {};
+
+	const result = await db.transaction(async (tx): Promise<z.input<typeof CastVoteResponse>> => {
 		const transaction = (await getVotingTransactionById(id))!;
 
 		const group = await getGroupIdByStudent(transaction.student);
@@ -191,7 +195,7 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					return { error: "violatedConditions", details: "seat is taken" };
 
 				// update current
-				if (state.current === students.length - 1) await stopVotingCampaign(campaign.id);
+				if (state.current === students.length - 1) extra.stopCampaign = campaign.id;
 				else
 					await tx
 						.update(votingCampaigns)
@@ -212,7 +216,7 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				if (req.topSeats.some((s) => s < 1 || s > students.length))
 					return { error: "violatedConditions", details: "invalid seat numbers" };
 
-				if (totalVotes + 1 === students.length) await stopVotingCampaign(campaign.id);
+				if (totalVotes + 1 === students.length) extra.stopCampaign = campaign.id;
 				break;
 			}
 			case "casino": {
@@ -237,3 +241,7 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 			.values({ student: transaction.student, vote: req, campaign: transaction.campaign });
 		return ok(null);
 	});
+
+	if (extra.stopCampaign) await stopVotingCampaign(extra.stopCampaign);
+	return result;
+};
