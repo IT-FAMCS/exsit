@@ -14,7 +14,11 @@ import { db } from "../connection";
 import { exams, votes, votingCampaigns, votingTransactions } from "../schema/exams";
 import { ok } from "@exsit/shared/types/api";
 import { ExsitJwtPayload } from "@/routers/auth";
-import { getVotingCampaignById } from "./campaigns";
+import {
+	getVotingCampaignById,
+	getVotingCampaignStatistics,
+	stopVotingCampaign,
+} from "./campaigns";
 import { eq, and, inArray } from "drizzle-orm";
 import { groups, students } from "../schema/users";
 
@@ -164,6 +168,8 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				details: `mismatched campaign type (${req.campaignType} and ${campaign.options.type})`,
 			};
 
+		const totalVotes = (await getVotingCampaignStatistics(campaign))!.voted;
+
 		switch (req.campaignType) {
 			case "random_select": {
 				const state = campaign.state as Extract<VotingCampaignStateType, { type: "random_select" }>;
@@ -185,10 +191,8 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					return { error: "violatedConditions", details: "seat is taken" };
 
 				// update current
-				if (state.current === students.length - 1) {
-					console.warn("FINISH random_select CAMPAIGN");
-					// TODO: FINISH CAMPAIGN
-				} else
+				if (state.current === students.length - 1) await stopVotingCampaign(campaign.id);
+				else
 					await tx
 						.update(votingCampaigns)
 						.set({ state: { ...state, current: state.current + 1 } })
@@ -207,6 +211,8 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					};
 				if (req.topSeats.some((s) => s < 1 || s > students.length))
 					return { error: "violatedConditions", details: "invalid seat numbers" };
+
+				if (totalVotes + 1 === students.length) await stopVotingCampaign(campaign.id);
 				break;
 			}
 			case "casino": {

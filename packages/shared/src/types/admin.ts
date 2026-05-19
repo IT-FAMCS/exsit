@@ -7,6 +7,7 @@ export const [CreateGroupRequest, CreateGroupResponse] = createApiSchema({
 		course: z.number(),
 		num: z.number(),
 		department: z.string().nullable(),
+		notificationChannel: z.string().nullable(),
 	}),
 	response: z.string(),
 	errors: z.enum(["taken", "invalidCourse"]),

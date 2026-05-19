@@ -8,6 +8,8 @@ import {
 	type PreparationMaterialsType,
 	type VotingCampaignsType,
 	type VotingCampaignType,
+	CAMPAIGN_STATUSES_MESSAGES,
+	CAMPAIGN_TYPES_MESSAGES,
 } from "@exsit/shared/types/exams";
 import { Button, Card, Chip, Link, ScrollShadow, Separator, Spinner, Tabs } from "@heroui/react";
 import { Icon } from "@iconify/react";
@@ -70,20 +72,6 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 	);
 }
 
-const CAMPAIGN_TYPES: Record<VotingCampaignType["options"]["type"], string> = {
-	casino: "Казино",
-	hungarian: "Венгерский алгоритм",
-	random_select: "Перемешанная выборка",
-	ttc: "Высший торговый цикл",
-};
-
-const CAMPAIGN_STATUSES: Record<VotingCampaignType["status"], string> = {
-	created: "Голосование создано. Ожидай начала",
-	finished: "Голосование Завершено. Можно посмотреть результаты",
-	voting_ended: "Голосование окончено. Ожидай подсчёта результатов",
-	voting_started: "Голосование начато. Нажми чтобы проголосовать",
-};
-
 function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 	const navigate = useNavigate();
 
@@ -99,11 +87,11 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 				<Card.Header className="flex flex-row items-center gap-2">
 					<Icon width={32} icon="mdi:vote" />
 					<Card.Title className="text-start text-lg">
-						{CAMPAIGN_TYPES[props.campaign.options.type]}
+						{CAMPAIGN_TYPES_MESSAGES[props.campaign.options.type]}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content className="text-muted flex w-full flex-row gap-2">
-					<p>{CAMPAIGN_STATUSES[props.campaign.status]}</p>
+					<p>{CAMPAIGN_STATUSES_MESSAGES[props.campaign.status]}</p>
 				</Card.Content>
 			</Card>
 		</Pressable>

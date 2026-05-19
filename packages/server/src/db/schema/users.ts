@@ -9,6 +9,7 @@ export const groups = s.sqliteTable(
 		course: s.integer().notNull(),
 		num: s.integer().notNull(),
 		department: s.text(),
+		notificationChannel: s.text(),
 	},
 	(table) => [s.check("course", sql`${table.course} between 1 and 4`)],
 );

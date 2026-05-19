@@ -14,6 +14,7 @@ import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
 import { cleanupStaleVotingTransactions } from "./db/actions/transactions";
+import { startBot } from "./bot";
 
 const app = new Hono()
 	.use(logger())
@@ -60,6 +61,7 @@ app
 	.route("/voting", votingRouter);
 
 setInterval(cleanupStaleVotingTransactions, 60 * 60 * 1000);
+startBot();
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);
 });

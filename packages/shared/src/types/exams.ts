@@ -4,8 +4,22 @@ import { FileMetadata } from "./files";
 
 export const MATERIALS_TAGS = ["questions"] as const;
 export const MATERIALS_TYPES = ["file", "link"] as const;
+
 export const CAMPAIGN_STATUSES = ["created", "voting_started", "voting_ended", "finished"] as const;
 export const SUPPORTED_CAMPAIGN_TYPES = ["random_select", "hungarian", "casino", "ttc"] as const;
+
+export const CAMPAIGN_TYPES_MESSAGES: Record<VotingCampaignType["options"]["type"], string> = {
+	casino: "Казино",
+	hungarian: "Венгерский алгоритм",
+	random_select: "Перемешанная выборка",
+	ttc: "Высший торговый цикл",
+};
+export const CAMPAIGN_STATUSES_MESSAGES: Record<VotingCampaignType["status"], string> = {
+	created: "Голосование создано",
+	finished: "Голосование завершено",
+	voting_ended: "Голосование окончено",
+	voting_started: "Голосование начато",
+};
 
 export const SupposedOrder = z.discriminatedUnion("type", [
 	z.object({
@@ -250,6 +264,10 @@ export const [RemoveVotingCampaignRequest, RemoveVotingCampaignResponse] = creat
 });
 
 export const [StartVotingCampaignRequest, StartVotingCampaignResponse] = createApiSchema({
+	errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidCampaignID"]),
+});
+
+export const [StopVotingCampaignRequest, StopVotingCampaignResponse] = createApiSchema({
 	errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidCampaignID"]),
 });
 

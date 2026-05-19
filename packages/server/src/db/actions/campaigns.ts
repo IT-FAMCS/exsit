@@ -6,6 +6,8 @@ import {
 	RemoveVotingCampaignResponse,
 	SUPPORTED_CAMPAIGN_TYPES,
 	VotingCampaignStateType,
+	StartVotingCampaignResponse,
+	StopVotingCampaignResponse,
 } from "@exsit/shared/types/exams";
 import { eq, and, sql, count } from "drizzle-orm";
 import z from "zod";
@@ -14,12 +16,13 @@ import { votes, votingCampaigns } from "../schema/exams";
 import { ulid } from "ulid";
 import { getGroupIdByExam, getGroupSize } from "./groups";
 import { shuffleArray } from "@/utils/math";
+import { sendVotingCampaignStartedMessage } from "@/bot";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
 export const getVotingCampaignById = async (id: string) =>
 	(await db.select().from(votingCampaigns).where(eq(votingCampaigns.id, id)))?.at(0);
 
-const getVotingCampaignStatistics = async (
+export const getVotingCampaignStatistics = async (
 	campaign: (typeof votingCampaigns)["$inferSelect"],
 ): Promise<{ started?: string; stopped?: string; voted: number; total: number } | undefined> => {
 	const total = await getGroupSize((await getGroupIdByExam(campaign.exam)) ?? "");
@@ -105,15 +108,17 @@ export const removeVotingCampaign = async (
 
 export const startVotingCampaign = async (
 	campaignId: string,
-): Promise<z.input<typeof RemoveVotingCampaignResponse>> => {
+): Promise<z.input<typeof StartVotingCampaignResponse>> => {
 	await db
 		.update(votingCampaigns)
 		.set({ status: "voting_started" })
 		.where(eq(votingCampaigns.id, campaignId));
 
 	const campaign = (await getVotingCampaignById(campaignId))!;
+	const group = (await getGroupIdByExam(campaign.exam))!;
+
 	if (campaign.options.type === "random_select") {
-		const groupSize = await getGroupSize((await getGroupIdByExam(campaign.exam)) ?? "");
+		const groupSize = await getGroupSize(group);
 		if (!groupSize) return { error: "invalidGroupCode" };
 		const order = shuffleArray(Array.from({ length: groupSize }, (_, i) => i));
 		await db.update(votingCampaigns).set({
@@ -125,5 +130,19 @@ export const startVotingCampaign = async (
 		});
 	}
 
+	await sendVotingCampaignStartedMessage(campaign);
+	return ok(null);
+};
+
+export const stopVotingCampaign = async (
+	campaignId: string,
+): Promise<z.input<typeof StopVotingCampaignResponse>> => {
+	await db
+		.update(votingCampaigns)
+		.set({ status: "voting_ended" })
+		.where(eq(votingCampaigns.id, campaignId));
+
+	const campaign = (await getVotingCampaignById(campaignId))!;
+	await sendVotingCampaignStartedMessage(campaign);
 	return ok(null);
 };
