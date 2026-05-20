@@ -8,15 +8,17 @@ import {
 	VotingCampaignStateType,
 	StartVotingCampaignResponse,
 	StopVotingCampaignResponse,
+	CalculateVotingCampaignResultsResponse,
 } from "@exsit/shared/types/exams";
 import { eq, and, sql, count } from "drizzle-orm";
 import z from "zod";
 import { db } from "../connection";
 import { votes, votingCampaigns } from "../schema/exams";
 import { ulid } from "ulid";
-import { getGroupIdByExam, getGroupSize } from "./groups";
+import { getGroupIdByExam, getGroupSize, getGroupStudents } from "./groups";
 import { shuffleArray } from "@/utils/math";
 import { sendVotingCampaignStartedMessage, sendVotingCampaignStoppedMessage } from "@/bot";
+import { VOTING_CAMPAIGN_CALCULATORS } from "./calculators/shared";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
 export const getVotingCampaignById = async (id: string) =>
@@ -145,4 +147,31 @@ export const stopVotingCampaign = async (
 	const campaign = (await getVotingCampaignById(campaignId))!;
 	await sendVotingCampaignStoppedMessage(campaign);
 	return ok(null);
+};
+
+export const calculateVotingCampaignResults = async (
+	campaignId: string,
+): Promise<z.input<typeof CalculateVotingCampaignResultsResponse>> => {
+	const campaign = (await getVotingCampaignById(campaignId))!;
+	if (campaign.status !== "voting_ended") return { error: "votingNotEnded" };
+	const group = await getGroupStudents((await getGroupIdByExam(campaign.exam)) ?? "");
+	if (!group) return { error: "invalidGroupCode" };
+	const mappedVotes = Object.fromEntries(
+		(await db.select({ student: votes.student, vote: votes.vote }).from(votes)).map((obj) => [
+			obj.student,
+			obj.vote,
+		]),
+	);
+	const result = await VOTING_CAMPAIGN_CALCULATORS[campaign.options.type]({
+		campaign,
+		group,
+		votes: mappedVotes,
+	});
+	if (result.error === null) {
+		await db
+			.update(votingCampaigns)
+			.set({ status: "finished", result: result.data })
+			.where(eq(votingCampaigns.id, campaignId));
+	}
+	return result;
 };

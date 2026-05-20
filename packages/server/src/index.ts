@@ -6,6 +6,7 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { except } from "hono/combine";
 import { jwt } from "hono/jwt";
+import cron from "node-cron";
 
 import { adminRouter } from "./routers/admins";
 import { groupRouter } from "./routers/groups";
@@ -14,7 +15,7 @@ import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
 import { cleanupStaleVotingTransactions } from "./db/actions/transactions";
-import { startBot } from "./bot";
+import { setBotProfilePicture, startBot } from "./bot";
 
 const app = new Hono()
 	.use(logger())
@@ -60,7 +61,8 @@ app
 	.route("/campaigns", campaignsRouter)
 	.route("/voting", votingRouter);
 
-setInterval(cleanupStaleVotingTransactions, 60 * 60 * 1000);
+cron.schedule("0 * * * *", cleanupStaleVotingTransactions);
+cron.schedule("* 0 * * *", setBotProfilePicture);
 startBot();
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);

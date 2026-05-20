@@ -1,0 +1,32 @@
+import { votingCampaigns } from "@/db/schema/exams";
+import { students } from "@/db/schema/users";
+import {
+	CalculateVotingCampaignResultsResponse,
+	SUPPORTED_CAMPAIGN_TYPES,
+	VoteType,
+} from "@exsit/shared/types/exams";
+import z from "zod";
+import { calculateCasinoResults } from "./casino";
+import { calculateHungarianResults } from "./hungarian";
+import { calculateRandomSelectResults } from "./random-select";
+import { calculateTtcResults } from "./ttc";
+
+export type VotingCampaignCalculatorMetadata = {
+	group: (typeof students)["$inferSelect"][];
+	campaign: (typeof votingCampaigns)["$inferSelect"];
+	votes: Record<string, VoteType>;
+};
+
+export type VotingCampaignCalculator = (
+	meta: VotingCampaignCalculatorMetadata,
+) => Promise<z.infer<typeof CalculateVotingCampaignResultsResponse>>;
+
+export const VOTING_CAMPAIGN_CALCULATORS: Record<
+	(typeof SUPPORTED_CAMPAIGN_TYPES)[number],
+	VotingCampaignCalculator
+> = {
+	casino: calculateCasinoResults,
+	hungarian: calculateHungarianResults,
+	random_select: calculateRandomSelectResults,
+	ttc: calculateTtcResults,
+};

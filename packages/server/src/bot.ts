@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InputFile } from "grammy";
 import { votingCampaigns } from "./db/schema/exams";
 import { getExamById } from "./db/actions/exams";
 import { getGroupById, getGroupIdByExam } from "./db/actions/groups";
@@ -11,8 +11,21 @@ export const startBot = async () => {
 	bot.on("msg", async (ctx) => {
 		ctx.reply(":3", { reply_parameters: { message_id: ctx.msgId } });
 	});
-	console.log("starting telegram bot");
-	await bot.start();
+	await bot.start({
+		onStart: (info) => {
+			console.log(`started telegram bot as @${info.username}`);
+			setBotProfilePicture();
+		},
+	});
+};
+
+export const setBotProfilePicture = async () => {
+	if (!bot) return;
+	const index = new Date().getDay() % 4;
+	await bot.api.setMyProfilePhoto({
+		type: "static",
+		photo: new InputFile(`./assets/pfps/${index}.jpg`),
+	});
 };
 
 export const sendVotingCampaignStartedMessage = async (
@@ -23,7 +36,7 @@ export const sendVotingCampaignStartedMessage = async (
 	if (!bot || !exam || !group || !group.notificationChannel) return;
 	await bot.api.sendMessage(
 		group.notificationChannel,
-		`Голосование начато: **${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}**\n[Ссылка на голосование](${process.env.FRONTEND_HOSTNAME}/vote/${campaign.id})\n\`${group.publicCode}\``,
+		`Голосование начато: **${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}**\n[Ссылка на голосование](${process.env.FRONTEND_HOSTNAME}/vote/${campaign.id})\n||\`${group.publicCode}\`||`,
 		{ parse_mode: "MarkdownV2" },
 	);
 };
@@ -36,7 +49,7 @@ export const sendVotingCampaignStoppedMessage = async (
 	if (!bot || !exam || !group || !group.notificationChannel) return;
 	await bot.api.sendMessage(
 		group.notificationChannel,
-		`Голосование окончено: **${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}**\nОжидаем подсчёта результатов\n\`${group.publicCode}\``,
+		`Голосование окончено: **${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}**\nОжидаем подсчёта результатов\n||\`${group.publicCode}\`||`,
 		{ parse_mode: "MarkdownV2" },
 	);
 };

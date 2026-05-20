@@ -6,6 +6,7 @@ import {
 	SupposedOrderType,
 	VoteType,
 	VotingCampaignOptionsType,
+	VotingCampaignResultsType,
 	VotingCampaignStateType,
 } from "@exsit/shared/types/exams";
 import { groups, students } from "./users";
@@ -45,13 +46,20 @@ export const votingCampaigns = s.sqliteTable("voting_campaigns", {
 	state: s.text({ mode: "json" }).$type<VotingCampaignStateType>().notNull(),
 	started: s.integer({ mode: "timestamp_ms" }),
 	stopped: s.integer({ mode: "timestamp_ms" }),
+	result: s.text().$type<VotingCampaignResultsType>(),
 });
 
 export const votes = s.sqliteTable(
 	"votes",
 	{
-		student: s.text().references(() => students.id, { onDelete: "cascade" }),
-		campaign: s.text().references(() => votingCampaigns.id, { onDelete: "cascade" }),
+		student: s
+			.text()
+			.notNull()
+			.references(() => students.id, { onDelete: "cascade" }),
+		campaign: s
+			.text()
+			.notNull()
+			.references(() => votingCampaigns.id, { onDelete: "cascade" }),
 		vote: s.text({ mode: "json" }).$type<VoteType>().notNull(),
 	},
 	(t) => [s.primaryKey({ columns: [t.student, t.campaign] })],

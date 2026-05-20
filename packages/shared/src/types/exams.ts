@@ -182,6 +182,12 @@ export type VotingCampaignType = z.infer<typeof VotingCampaign>;
 export const VotingCampaigns = z.record(z.string(), VotingCampaign);
 export type VotingCampaignsType = z.infer<typeof VotingCampaigns>;
 
+export const VotingCampaignResults = z.object({
+	notes: z.array(z.string()).default([]),
+	order: z.array(z.number()),
+});
+export type VotingCampaignResultsType = z.infer<typeof VotingCampaignResults>;
+
 export const [CreateExamRequest, CreateExamResponse] = createApiSchema({
 	request: Exam,
 	response: z.string(),
@@ -270,6 +276,18 @@ export const [StartVotingCampaignRequest, StartVotingCampaignResponse] = createA
 export const [StopVotingCampaignRequest, StopVotingCampaignResponse] = createApiSchema({
 	errors: z.enum(["invalidGroupCode", "invalidExamID", "invalidCampaignID"]),
 });
+
+export const [CalculateVotingCampaignResultsRequest, CalculateVotingCampaignResultsResponse] =
+	createApiSchema({
+		response: VotingCampaignResults,
+		errors: z.enum([
+			"invalidGroupCode",
+			"invalidExamID",
+			"invalidCampaignID",
+			"votingNotEnded",
+			"calculationError",
+		]),
+	});
 
 export const [CastVoteRequest, CastVoteResponse] = createApiSchema({
 	request: Vote,
