@@ -30,3 +30,22 @@ export const VOTING_CAMPAIGN_CALCULATORS: Record<
 	random_select: calculateRandomSelectResults,
 	ttc: calculateTtcResults,
 };
+
+export const filterVotes = (votes: Record<string, VoteType>) => {
+	const exemptions = Object.fromEntries(
+		Object.entries(votes).filter((kv) => kv[1].campaignType === "exemption"),
+	);
+	return [
+		exemptions,
+		Object.fromEntries(
+			Object.entries(votes).filter((kv) => !Object.keys(exemptions).includes(kv[0])),
+		),
+	];
+};
+
+export const calculationError = (
+	details?: string,
+): z.infer<typeof CalculateVotingCampaignResultsResponse> => ({
+	error: "calculationError",
+	details,
+});
