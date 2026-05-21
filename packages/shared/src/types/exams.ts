@@ -125,15 +125,15 @@ export const VotingCampaignOptions = z.discriminatedUnion("type", [
 	}),
 	z.object({
 		type: z.literal("hungarian"),
-		pickAmount: z
-			.number()
+		pickAmount: z.coerce
+			.number<string>()
 			.optional()
 			.transform((n) => n ?? 3),
 	}),
 	z.object({
 		type: z.literal("casino"),
-		availablePoints: z
-			.number()
+		availablePoints: z.coerce
+			.number<string>()
 			.optional()
 			.transform((n) => n ?? 10),
 	}),

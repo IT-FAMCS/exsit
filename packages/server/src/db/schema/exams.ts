@@ -46,7 +46,7 @@ export const votingCampaigns = s.sqliteTable("voting_campaigns", {
 	state: s.text({ mode: "json" }).$type<VotingCampaignStateType>().notNull(),
 	started: s.integer({ mode: "timestamp_ms" }),
 	stopped: s.integer({ mode: "timestamp_ms" }),
-	result: s.text().$type<VotingCampaignResultsType>(),
+	result: s.text({ mode: "json" }).$type<VotingCampaignResultsType>(),
 });
 
 export const votes = s.sqliteTable(

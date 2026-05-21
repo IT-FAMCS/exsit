@@ -2,6 +2,7 @@ import {
 	startVotingCampaign,
 	removeVotingCampaign,
 	votingCampaignExists,
+	calculateVotingCampaignResults,
 } from "@/db/actions/campaigns";
 import { requireExisting } from "@/utils/hono";
 import { Hono } from "hono";
@@ -32,7 +33,7 @@ export const campaignsRouter = new Hono<{ Variables: JwtVariables }>()
 		c.json(await startVotingCampaign(c.req.param("campaign"))),
 	)
 	.patch("/:campaign/calculate", async (c) =>
-		c.json(await startVotingCampaign(c.req.param("campaign"))),
+		c.json(await calculateVotingCampaignResults(c.req.param("campaign"))),
 	)
 	.delete("/:campaign/remove", async (c) =>
 		c.json(await removeVotingCampaign(c.req.param("campaign"))),

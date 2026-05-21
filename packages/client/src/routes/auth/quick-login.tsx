@@ -53,6 +53,8 @@ export default function QuickLoginRoute() {
 								? "/"
 								: "/onboarding";
 				},
+				onFetchError: () => navigate("/login"),
+				onApiError: () => navigate("/login"),
 				errorMessages: {
 					invalidCredentials: "Неверный логин или пароль",
 					invalidGroupCode: "Неверный код группы",
