@@ -126,14 +126,14 @@ export const VotingCampaignOptions = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("hungarian"),
 		pickAmount: z.coerce
-			.number<string>()
+			.number()
 			.optional()
 			.transform((n) => n ?? 3),
 	}),
 	z.object({
 		type: z.literal("casino"),
 		availablePoints: z.coerce
-			.number<string>()
+			.number()
 			.optional()
 			.transform((n) => n ?? 10),
 	}),
@@ -184,7 +184,8 @@ export type VotingCampaignsType = z.infer<typeof VotingCampaigns>;
 
 export const VotingCampaignResults = z.object({
 	notes: z.array(z.string()).default([]),
-	order: z.array(z.number()),
+	order: z.array(z.string()),
+	exemptions: z.array(z.string()),
 });
 export type VotingCampaignResultsType = z.infer<typeof VotingCampaignResults>;
 

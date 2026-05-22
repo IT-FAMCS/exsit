@@ -17,7 +17,11 @@ import { votes, votingCampaigns } from "../schema/exams";
 import { ulid } from "ulid";
 import { getGroupIdByExam, getGroupSize, getGroupStudents } from "./groups";
 import { shuffleArray } from "@/utils/math";
-import { sendVotingCampaignStartedMessage, sendVotingCampaignStoppedMessage } from "@/bot";
+import {
+	sendVotingCampaignResultsMessage,
+	sendVotingCampaignStartedMessage,
+	sendVotingCampaignStoppedMessage,
+} from "@/bot";
 import { VOTING_CAMPAIGN_CALCULATORS } from "./calculators/shared";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
@@ -172,6 +176,7 @@ export const calculateVotingCampaignResults = async (
 			.update(votingCampaigns)
 			.set({ status: "finished", result: result.data })
 			.where(eq(votingCampaigns.id, campaignId));
+		await sendVotingCampaignResultsMessage({ ...campaign, result: result.data });
 	}
 	return result;
 };
