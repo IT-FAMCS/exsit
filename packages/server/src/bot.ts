@@ -3,6 +3,9 @@ import { votingCampaigns } from "./db/schema/exams";
 import { getExamById } from "./db/actions/exams";
 import { getGroupById, getGroupIdByExam, getGroupStudents } from "./db/actions/groups";
 import { CAMPAIGN_TYPES_MESSAGES } from "@exsit/shared/types/exams";
+import { NotifyGroupRequest, NotifyGroupResponse } from "@exsit/shared/types/admin";
+import z from "zod";
+import { ok } from "@exsit/shared/types/api";
 
 let bot: Bot | null = null;
 export const startBot = async () => {
@@ -70,4 +73,16 @@ export const sendVotingCampaignResultsMessage = async (
 		contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.exemptions[idx])?.fullName}\n`;
 	contents += `\n<tg-spoiler>${group.publicCode}</tg-spoiler>`;
 	await bot.api.sendMessage(group.notificationChannel, contents, { parse_mode: "HTML" });
+};
+
+export const sendGroupMessage = async (
+	groupId: string,
+	req: z.infer<typeof NotifyGroupRequest>,
+): Promise<z.input<typeof NotifyGroupResponse>> => {
+	if (!bot) return ok(null);
+	const group = await getGroupById(groupId);
+	if (!group) return { error: "invalidGroupID" };
+	if (!group.notificationChannel) return { error: "notificationsDisabled" };
+	await bot.api.sendMessage(group.notificationChannel, req.text, { parse_mode: req.parseMode });
+	return ok(null);
 };

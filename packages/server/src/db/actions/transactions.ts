@@ -174,7 +174,7 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 
 		const totalVotes = (await getVotingCampaignStatistics(campaign))!.voted;
 
-		switch (req.campaignType) {
+		switch (campaign.options.type) {
 			case "random_select": {
 				const state = campaign.state as Extract<VotingCampaignStateType, { type: "random_select" }>;
 				const currentStudent = students.at(state.order[state.current]);
@@ -185,14 +185,17 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					};
 				if (currentStudent.id !== transaction.student)
 					return { error: "violatedConditions", details: "it's not your turn to vote" };
-				if (req.seat < 1 || req.seat > students.length)
-					return { error: "violatedConditions", details: "invalid seat number" };
+				if (req.campaignType === "random_select") {
+					if (req.seat < 1 || req.seat > students.length)
+						return { error: "violatedConditions", details: "invalid seat number" };
 
-				const takenSeats = (
-					await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
-				).map((s) => (s.vote as Extract<VoteType, { campaignType: "random_select" }>).seat);
-				if (takenSeats.includes(req.seat))
-					return { error: "violatedConditions", details: "seat is taken" };
+					const takenSeats = (
+						await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
+					).map((s) => (s.vote as Extract<VoteType, { campaignType: "random_select" }>).seat);
+					if (takenSeats.includes(req.seat))
+						return { error: "violatedConditions", details: "seat is taken" };
+				} else if (req.campaignType !== "exemption")
+					return { error: "violatedConditions", details: "invalid campaign type from voter" };
 
 				// update current
 				if (state.current === students.length - 1) extra.stopCampaign = campaign.id;
@@ -200,10 +203,13 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					await tx
 						.update(votingCampaigns)
 						.set({ state: { ...state, current: state.current + 1 } })
-						.where(eq(votingCampaigns.id, transaction.campaign));
+						.where(eq(votingCampaigns.id, campaign.id));
 				break;
 			}
 			case "hungarian": {
+				if (req.campaignType === "exemption") break;
+				if (req.campaignType !== "hungarian")
+					return { error: "violatedConditions", details: "invalid campaign type from voter" };
 				const options = campaign.options as Extract<
 					VotingCampaignOptionsType,
 					{ type: "hungarian" }
@@ -220,19 +226,8 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				break;
 			}
 			case "casino": {
-				const options = campaign.options as Extract<VotingCampaignOptionsType, { type: "casino" }>;
-				if (Object.keys(req.distribution).some((s) => Number(s) < 1 || Number(s) > students.length))
-					return { error: "violatedConditions", details: "invalid seat numbers" };
-				const total = Object.values(req.distribution).reduce((acc, cur) => acc + cur, 0);
-				if (total !== options.availablePoints)
-					return {
-						error: "violatedConditions",
-						details: `points don't add up to the campaign's required value (${options.availablePoints})`,
-					};
 				break;
 			}
-			case "exemption":
-				break;
 		}
 
 		await tx.delete(votingTransactions).where(eq(votingTransactions.id, id));

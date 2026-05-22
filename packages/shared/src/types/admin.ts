@@ -36,3 +36,12 @@ export const [CreateAdminRequest, CreateAdminResponse] = createApiSchema({
 	response: z.null(),
 	errors: z.enum(["taken"]),
 });
+
+export const [NotifyGroupRequest, NotifyGroupResponse] = createApiSchema({
+	request: z.object({
+		text: z.string(),
+		parseMode: z.enum(["MarkdownV2", "HTML"]).default("HTML"),
+	}),
+	response: z.null(),
+	errors: z.enum(["invalidGroupID", "notificationsDisabled"]),
+});

@@ -2,11 +2,11 @@ import { ok } from "@exsit/shared/types/api";
 import { calculationError, filterVotes, VotingCampaignCalculator } from "./shared";
 import { munkres } from "munkres";
 
-const UNRANKED = 1000;
 export const calculateHungarianResults: VotingCampaignCalculator = async (meta) => {
 	if (meta.campaign.options.type !== "hungarian") return calculationError();
-	const costMatrix = Array.from({ length: meta.group.length }, () =>
-		Array.from({ length: meta.group.length }, () => UNRANKED),
+	const costMatrix = Array.from(
+		{ length: meta.group.length },
+		() => Array.from({ length: meta.group.length }, () => 1000), // NOTE: using 1000 here is safe unless there's a group with that many people
 	);
 
 	const votes = Object.entries(meta.votes);
