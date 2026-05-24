@@ -10,7 +10,7 @@ export const calculateHungarianResults: VotingCampaignCalculator = async (meta) 
 	);
 
 	const votes = Object.entries(meta.votes);
-	const exemptions = Object.keys(filterVotes(meta.votes)[0]);
+	const exemptions = Object.keys(filterVotes(meta.votes).exemptions);
 	if (votes.length !== meta.group.length) return calculationError("not everyone voted");
 
 	for (let i = 0; i < votes.length; i++) {

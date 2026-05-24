@@ -36,6 +36,9 @@ export const SupposedOrder = z.discriminatedUnion("type", [
 		type: z.literal("inGroupsExtended"),
 		groups: z.array(z.number().min(1)),
 	}),
+	z.object({
+		type: z.literal("allAtOnce"),
+	}),
 ]);
 export type SupposedOrderType = z.infer<typeof SupposedOrder>;
 
@@ -54,10 +57,12 @@ export const Vote = z.discriminatedUnion("campaignType", [
 	z.object({
 		campaignType: z.literal("casino"),
 		distribution: z.record(z.number(), z.number()),
+		round: z.number(),
 	}),
 	z.object({
 		campaignType: z.literal("ttc"),
 		preferred: z.number().nullable(),
+		iteration: z.number(),
 	}),
 ]);
 export type VoteType = z.infer<typeof Vote>;
@@ -79,9 +84,12 @@ export const VotingTransactionInformation = z
 		z.object({
 			campaignType: z.literal("casino"),
 			groupSize: z.number(),
-			totalRounds: z.number(),
+			rounds: z.object({ current: z.number(), total: z.number() }),
 			availablePoints: z.number(),
-			distribution: z.record(z.number(), z.object({ amount: z.number(), max: z.number() })),
+			sharedDistribution: z
+				.record(z.number(), z.object({ amount: z.number(), max: z.number().nullable() }))
+				.optional(),
+			personalDistribution: z.record(z.number(), z.number()).optional(),
 		}),
 		z.object({
 			campaignType: z.literal("ttc"),
@@ -136,6 +144,10 @@ export const VotingCampaignOptions = z.discriminatedUnion("type", [
 			.number()
 			.optional()
 			.transform((n) => n ?? 10),
+		rounds: z.coerce
+			.number()
+			.optional()
+			.transform((n) => n ?? 3),
 	}),
 	z.object({
 		type: z.literal("ttc"),
@@ -259,6 +271,10 @@ export const [GetVotingCampaignsRequest, GetVotingCampaignsResponse] = createApi
 	),
 	errors: z.enum(["invalidGroupCode", "invalidExamID", "failedToGetStatistics"]),
 });
+export type ExtendedVotingCampaignType = Extract<
+	z.infer<typeof GetVotingCampaignsResponse>,
+	{ error: null }
+>["data"];
 
 export const [CreateVotingCampaignRequest, CreateVotingCampaignResponse] = createApiSchema({
 	request: VotingCampaignOptions,

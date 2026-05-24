@@ -1,8 +1,12 @@
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
-import { GetExamsResponse, type ExamType } from "@exsit/shared/types/exams";
-import { Card, Chip, Kbd, Link, Separator, Tabs } from "@heroui/react";
+import {
+	GetExamsResponse,
+	SUPPORTED_CAMPAIGN_TYPES,
+	type ExamType,
+} from "@exsit/shared/types/exams";
+import { Card, Chip, Kbd, Link, ScrollShadow, Separator, Tabs } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -22,8 +26,10 @@ function ExamCard(props: { id: string; exam: ExamType }) {
 		<Pressable onPress={() => navigate(`/exam/${props.id}`)}>
 			<Card className="pressable-card w-full" role="button">
 				<Card.Header className="flex flex-row items-center gap-2">
-					<Icon width={32} icon="mdi:emoticon-cry-outline" />
-					<Card.Title className="text-start text-lg">{props.exam.subject}</Card.Title>
+					<Card.Title className="flex items-center justify-center gap-2 text-start text-lg">
+						<Icon width={32} icon="mdi:emoticon-cry-outline" className="min-w-8" />{" "}
+						<p className="grow text-start text-lg leading-none">{props.exam.subject}</p>
+					</Card.Title>
 				</Card.Header>
 				<Card.Content className="text-muted flex w-full flex-row gap-2 px-4">
 					<div className="flex flex-col items-start justify-start gap-2">
@@ -82,7 +88,7 @@ export default function MainRoute() {
 	}
 
 	return (
-		<div className="flex h-dvh w-dvw items-center justify-center p-4">
+		<div className="flex min-h-dvh w-dvw items-center justify-center p-4">
 			<div className="flex w-full max-w-md flex-col items-center justify-center gap-4">
 				<Logo className="text-accent w-64" />
 				<p className="text-4xl font-bold">Привет, {auth.informalFirstName}!</p>
@@ -93,7 +99,7 @@ export default function MainRoute() {
 								<Icon icon="mdi:bookmark" width={18} />
 								Экзамены
 								{exams && (
-									<Chip variant="primary" color="accent">
+									<Chip variant="soft" color="accent">
 										{Object.keys(exams).length}
 									</Chip>
 								)}
@@ -101,16 +107,30 @@ export default function MainRoute() {
 							</Tabs.Tab>
 							<Tabs.Tab id="algorithms" className="gap-2">
 								<Icon icon="mdi:abacus" width={18} />
-								Алгоритмы <Tabs.Indicator />
+								Алгоритмы
+								<Chip variant="soft" color="accent">
+									{Object.keys(SUPPORTED_CAMPAIGN_TYPES).length}
+								</Chip>
+								<Tabs.Indicator />
 							</Tabs.Tab>
 						</Tabs.List>
 					</Tabs.ListContainer>
 					<Tabs.Panel className="pt-4" id="exams">
-						{exams &&
-							Object.entries(exams).map((kv) => <ExamCard id={kv[0]} key={kv[0]} exam={kv[1]} />)}
+						<ScrollShadow className="max-h-[40dvh]">
+							<div className="flex flex-col gap-2">
+								{exams &&
+									Object.entries(exams).map((kv) => (
+										<ExamCard id={kv[0]} key={kv[0]} exam={kv[1]} />
+									))}
+							</div>
+						</ScrollShadow>
 					</Tabs.Panel>
-					<Tabs.Panel className="pt-4" id="algorithms">
-						meow
+					<Tabs.Panel
+						className="text-muted flex flex-col items-center justify-center gap-1 pt-4"
+						id="algorithms"
+					>
+						<Icon width={48} icon="mdi:emoticon-sad-outline" />
+						<p>Раздел (пока что) не написан</p>
 					</Tabs.Panel>
 				</Tabs>
 				<div className="*:text-muted flex flex-row items-center justify-center gap-2">

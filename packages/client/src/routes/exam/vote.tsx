@@ -1,3 +1,4 @@
+import CasinoAlgorithmChooser from "@/components/voting/CasinoAlgorithmChooser";
 import HungarianAlgorithmChooser from "@/components/voting/HungarianAlgorithmChooser";
 import RandomSelectAlgorithmChooser from "@/components/voting/RandomSelectAlgorithmChooser";
 import { LoadingWall } from "@/components/Walls";
@@ -119,14 +120,17 @@ export default function VoteRoute() {
 
 	return (
 		!vote && (
-			<div className="relative flex h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
+			<div className="relative flex min-h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
 				{transactionInfo?.campaignType === "hungarian" && (
 					<HungarianAlgorithmChooser info={transactionInfo} onCast={setVote} />
 				)}
 				{transactionInfo?.campaignType === "random_select" && (
 					<RandomSelectAlgorithmChooser info={transactionInfo} onCast={setVote} />
 				)}
-				<p className="text-muted pointer-events-none absolute right-4 bottom-4">
+				{transactionInfo?.campaignType === "casino" && (
+					<CasinoAlgorithmChooser info={transactionInfo} onCast={setVote} />
+				)}
+				<p className="text-muted pointer-events-none absolute right-4 bottom-4 opacity-25">
 					{transactionToken}
 				</p>
 			</div>

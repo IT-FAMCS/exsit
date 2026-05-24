@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 export function ErrorWall(props: { text?: string }) {
 	const navigate = useNavigate();
 	return (
-		<div className="flex h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
+		<div className="flex min-h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
 			<Icon icon="mdi:alert-circle-outline" />
 			{props.text && <p className="text-muted text-center">{props.text}</p>}
 			<Button onPress={() => navigate("/")}>
@@ -17,7 +17,7 @@ export function ErrorWall(props: { text?: string }) {
 
 export function LoadingWall(props: { text?: string }) {
 	return (
-		<div className="flex h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
+		<div className="flex min-h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
 			<Spinner />
 			{props.text && <p className="text-muted text-center">{props.text}</p>}
 		</div>

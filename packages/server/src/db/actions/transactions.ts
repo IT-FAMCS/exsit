@@ -8,6 +8,7 @@ import {
 	VoteType,
 	VotingCampaignOptionsType,
 	VotingCampaignStateType,
+	VotingTransactionInformation,
 } from "@exsit/shared/types/exams";
 import { decodeTime, ulid } from "ulid";
 import { db } from "../connection";
@@ -19,8 +20,9 @@ import {
 	getVotingCampaignStatistics,
 	stopVotingCampaign,
 } from "./campaigns";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, count, sql } from "drizzle-orm";
 import { groups, students } from "../schema/users";
+import { sendCasinoIntermediateRoundMessage } from "@/bot";
 
 export const cleanupStaleVotingTransactions = async () => {
 	await db.transaction(async (tx) => {
@@ -64,7 +66,14 @@ export const createVotingTransaction = async (
 			.from(votes)
 			.where(and(eq(votes.student, payload.id), eq(votes.campaign, campaignId)))
 	)?.at(0);
-	if (existingVote) return { error: "alreadyVoted" };
+
+	const isValidCasinoVote =
+		existingVote &&
+		existingVote.vote.campaignType !== "exemption" &&
+		campaign.state.type === "casino" &&
+		existingVote.vote.campaignType === "casino" &&
+		campaign.state.round !== existingVote.vote.round;
+	if (existingVote && !isValidCasinoVote) return { error: "alreadyVoted" };
 
 	const existingTransaction = (
 		await db
@@ -91,13 +100,9 @@ export const createVotingTransaction = async (
 export const getTransactionInformation = async (id: string) =>
 	await db.transaction(
 		async (tx): Promise<z.input<typeof GetVotingTransactionInformationResponse>> => {
-			const campaign = (
-				await tx
-					.select()
-					.from(votingCampaigns)
-					.leftJoin(votingTransactions, eq(votingCampaigns.id, votingTransactions.campaign))
-					.where(eq(votingTransactions.id, id))
-			)?.at(0)?.voting_campaigns;
+			const transaction = (await getVotingTransactionById(id))!;
+
+			const campaign = await getVotingCampaignById(transaction.campaign);
 			if (!campaign) return { error: "invalidCampaignID" };
 
 			const supposedOrder = (await tx.select().from(exams).where(eq(exams.id, campaign.exam)))?.at(
@@ -141,13 +146,53 @@ export const getTransactionInformation = async (id: string) =>
 						groupSize: groupStudents.length,
 						supposedOrder,
 					});
-				case "casino":
+				case "casino": {
+					if (campaign.options.type !== "casino" || campaign.state.type !== "casino")
+						return { error: "internal", details: "corrupted campaign options/state" };
+
+					const previousVotes = (
+						await tx
+							.select()
+							.from(votes)
+							.where(and(eq(votes.campaign, campaign.id)))
+					).filter((v) => v.vote.campaignType === "casino") as ((typeof votes)["$inferSelect"] & {
+						vote: Extract<VoteType, { campaignType: "casino" }>;
+					})[];
+
+					const personalDistribution = previousVotes.find((v) => v.student === transaction.student)
+						?.vote.distribution;
+					let sharedDistribution:
+						| Extract<
+								z.input<typeof VotingTransactionInformation>,
+								{ campaignType: "casino" }
+						  >["sharedDistribution"]
+						| undefined = undefined;
+					if (previousVotes.length !== 0) {
+						sharedDistribution = {};
+						for (let i = 1; i <= groupStudents.length; i++) {
+							const filtered = previousVotes.filter((v) =>
+								Object.keys(v.vote.distribution).includes(i.toString()),
+							);
+							sharedDistribution[i] = {
+								amount: filtered.length,
+								max: Math.max(...filtered.map((v) => v.vote.distribution[i])),
+							};
+						}
+					}
+
 					return ok({
 						campaignType: "casino",
 						availablePoints: campaign.options.availablePoints,
 						groupSize: groupStudents.length,
 						supposedOrder,
+						rounds: { current: campaign.state.round, total: campaign.options.rounds },
+						personalDistribution,
+						sharedDistribution,
 					});
+				}
+				case "ttc": {
+					return { error: "internal", details: "TODO" };
+				}
 			}
 		},
 	);
@@ -226,6 +271,49 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				break;
 			}
 			case "casino": {
+				if (req.campaignType === "exemption") break;
+				if (req.campaignType !== "casino")
+					return { error: "violatedConditions", details: "invalid campaign type from voter" };
+
+				const options = campaign.options as Extract<VotingCampaignOptionsType, { type: "casino" }>;
+				const state = campaign.state as Extract<VotingCampaignStateType, { type: "casino" }>;
+				const roundVotes = (
+					await db
+						.select({ count: count() })
+						.from(votes)
+						.where(
+							and(
+								eq(votes.campaign, campaign.id),
+								sql`${votes.vote} ->> '$.round' == ${state.round} or ${votes.vote} ->> '$.campaignType' == 'exemption'`,
+							),
+						)
+				)?.at(0)?.count;
+				if (roundVotes === undefined)
+					return { error: "internal", details: "failed to calculate roundVotes" };
+
+				if (req.round !== state.round)
+					return { error: "violatedConditions", details: "invalid round number" };
+				const totalPoints = Object.values(req.distribution).reduce((acc, cur) => acc + cur, 0);
+				if (options.availablePoints !== totalPoints)
+					return {
+						error: "violatedConditions",
+						details: "points don't add up to options.availablePoints",
+					};
+				if (Object.values(req.distribution).some((v) => v < 0 || v > options.availablePoints))
+					return {
+						error: "violatedConditions",
+						details: "some points in the distribution go outside the allowed range",
+					};
+
+				state.distribution[transaction.student] = req.distribution;
+				if (roundVotes + 1 === students.length) {
+					if (state.round !== options.rounds) {
+						await sendCasinoIntermediateRoundMessage(campaign);
+						state.round++;
+					} else extra.stopCampaign = campaign.id;
+				}
+				console.log(roundVotes + 1, students.length, state);
+				await tx.update(votingCampaigns).set({ state }).where(eq(votingCampaigns.id, campaign.id));
 				break;
 			}
 		}
@@ -233,7 +321,16 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 		await tx.delete(votingTransactions).where(eq(votingTransactions.id, id));
 		await tx
 			.insert(votes)
-			.values({ student: transaction.student, vote: req, campaign: transaction.campaign });
+			.values({
+				student: transaction.student,
+				campaign: transaction.campaign,
+				vote: req,
+				timestamp: new Date(),
+			})
+			.onConflictDoUpdate({
+				target: [votes.student, votes.campaign],
+				set: { vote: req, timestamp: new Date() },
+			});
 		return ok(null);
 	});
 

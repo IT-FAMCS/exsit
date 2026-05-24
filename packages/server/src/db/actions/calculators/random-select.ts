@@ -6,7 +6,7 @@ export const calculateRandomSelectResults: VotingCampaignCalculator = async (met
 	// order is already enforced by the casting vote method
 	// so we can blindly copy the votes
 	let order: string[] = new Array(meta.group.length).fill("");
-	const exemptions = Object.keys(filterVotes(meta.votes)[0]);
+	const exemptions = Object.keys(filterVotes(meta.votes).exemptions);
 	for (const [voter, vote] of Object.entries(meta.votes)) {
 		if (vote.campaignType === "exemption") continue;
 		if (vote.campaignType !== "random_select")

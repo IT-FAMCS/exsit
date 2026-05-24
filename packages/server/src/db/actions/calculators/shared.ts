@@ -15,6 +15,7 @@ export type VotingCampaignCalculatorMetadata = {
 	group: (typeof students)["$inferSelect"][];
 	campaign: (typeof votingCampaigns)["$inferSelect"];
 	votes: Record<string, VoteType>;
+	timestamps: Record<string, Date>;
 };
 
 export type VotingCampaignCalculator = (
@@ -31,16 +32,18 @@ export const VOTING_CAMPAIGN_CALCULATORS: Record<
 	ttc: calculateTtcResults,
 };
 
-export const filterVotes = (votes: Record<string, VoteType>) => {
+export const filterVotes = (
+	votes: Record<string, VoteType>,
+): { exemptions: Record<string, VoteType>; other: Record<string, VoteType> } => {
 	const exemptions = Object.fromEntries(
 		Object.entries(votes).filter((kv) => kv[1].campaignType === "exemption"),
 	);
-	return [
+	return {
 		exemptions,
-		Object.fromEntries(
+		other: Object.fromEntries(
 			Object.entries(votes).filter((kv) => !Object.keys(exemptions).includes(kv[0])),
 		),
-	];
+	};
 };
 
 export const calculationError = (

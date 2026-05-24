@@ -103,6 +103,7 @@ export const uploadPreparationMaterial = async (
 			exam,
 			tag: req.tag,
 			type: "file",
+			title: req.title,
 		});
 		return ok(null);
 	} else {
@@ -111,6 +112,7 @@ export const uploadPreparationMaterial = async (
 			exam,
 			tag: req.tag,
 			type: "link",
+			title: req.title,
 		});
 		return ok(null);
 	}

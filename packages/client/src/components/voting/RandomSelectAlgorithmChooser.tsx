@@ -6,6 +6,7 @@ import { AlertDialog, Button, Table, Tag, TagGroup, type Key } from "@heroui/rea
 import { twMerge } from "tailwind-merge";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import SupposedOrderCard from "../SupposedOrderCard";
 
 export default function RandomSelectAlgorithmChooser(props: {
 	info: Extract<VotingTransactionInformationType, { campaignType: "random_select" }>;
@@ -168,6 +169,8 @@ export default function RandomSelectAlgorithmChooser(props: {
 					</Table.Content>
 				</Table.ScrollContainer>
 			</Table>
+
+			<SupposedOrderCard supposedOrder={props.info.supposedOrder} />
 		</div>
 	);
 }

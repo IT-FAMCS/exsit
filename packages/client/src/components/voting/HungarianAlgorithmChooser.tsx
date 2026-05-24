@@ -3,6 +3,7 @@ import { AlertDialog, Badge, Button, Tag, TagGroup, type Key } from "@heroui/rea
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import SupposedOrderCard from "../SupposedOrderCard";
 
 export default function HungarianAlgorithmChooser(props: {
 	info: Extract<VotingTransactionInformationType, { campaignType: "hungarian" }>;
@@ -125,6 +126,8 @@ export default function HungarianAlgorithmChooser(props: {
 					</AlertDialog.Container>
 				</AlertDialog.Backdrop>
 			</AlertDialog>
+
+			<SupposedOrderCard supposedOrder={props.info.supposedOrder} />
 		</div>
 	);
 }

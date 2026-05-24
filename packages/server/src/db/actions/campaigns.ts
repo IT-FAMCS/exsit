@@ -127,13 +127,16 @@ export const startVotingCampaign = async (
 		const groupSize = await getGroupSize(group);
 		if (!groupSize) return { error: "invalidGroupCode" };
 		const order = shuffleArray(Array.from({ length: groupSize }, (_, i) => i));
-		await db.update(votingCampaigns).set({
-			state: {
-				type: "random_select",
-				current: 0,
-				order,
-			} satisfies VotingCampaignStateType,
-		});
+		await db
+			.update(votingCampaigns)
+			.set({
+				state: {
+					type: "random_select",
+					current: 0,
+					order,
+				} satisfies VotingCampaignStateType,
+			})
+			.where(eq(votingCampaigns.id, campaign.id));
 	}
 
 	await sendVotingCampaignStartedMessage(campaign);
@@ -160,15 +163,15 @@ export const calculateVotingCampaignResults = async (
 	if (campaign.status !== "voting_ended") return { error: "votingNotEnded" };
 	const group = await getGroupStudents((await getGroupIdByExam(campaign.exam)) ?? "");
 	if (!group) return { error: "invalidGroupCode" };
-	const mappedVotes = Object.fromEntries(
-		(await db.select({ student: votes.student, vote: votes.vote }).from(votes)).map((obj) => [
-			obj.student,
-			obj.vote,
-		]),
-	);
+
+	const rawVotes = await db.select().from(votes).where(eq(votes.campaign, campaign.id));
+	const mappedVotes = Object.fromEntries(rawVotes.map((obj) => [obj.student, obj.vote]));
+	const timestamps = Object.fromEntries(rawVotes.map((obj) => [obj.student, obj.timestamp]));
+
 	const result = await VOTING_CAMPAIGN_CALCULATORS[campaign.options.type]({
 		campaign,
 		group,
+		timestamps,
 		votes: mappedVotes,
 	});
 	if (result.error === null) {

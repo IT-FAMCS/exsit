@@ -15,7 +15,7 @@ import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
 import { cleanupStaleVotingTransactions } from "./db/actions/transactions";
-import { setBotProfilePicture, startBot } from "./bot";
+import { setBotProfilePicture, startBot, stopBot } from "./bot";
 
 const app = new Hono()
 	.use(logger())
@@ -63,7 +63,13 @@ app
 
 cron.schedule("0 * * * *", cleanupStaleVotingTransactions);
 cron.schedule("* 0 * * *", setBotProfilePicture);
+
 startBot();
+process.once("SIGINT", async () => {
+	await stopBot();
+	process.exit(0);
+});
+
 serve(app, (info) => {
 	console.log(`server running at ${info.address}:${info.port}`);
 });

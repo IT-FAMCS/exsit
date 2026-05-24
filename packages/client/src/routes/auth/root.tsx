@@ -28,7 +28,7 @@ export function AuthProvider() {
 			{data ? (
 				<Outlet />
 			) : (
-				<div className="flex h-dvh w-dvw items-center justify-center">
+				<div className="flex min-h-dvh w-dvw items-center justify-center">
 					<Spinner />
 				</div>
 			)}
@@ -50,7 +50,7 @@ export function AdminAuthWall() {
 	return auth && auth.role === "admin" ? (
 		<Outlet />
 	) : (
-		<div className="flex h-dvh w-dvw items-center justify-center">
+		<div className="flex min-h-dvh w-dvw items-center justify-center">
 			<Spinner />
 		</div>
 	);

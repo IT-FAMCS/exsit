@@ -61,6 +61,7 @@ export const votes = s.sqliteTable(
 			.notNull()
 			.references(() => votingCampaigns.id, { onDelete: "cascade" }),
 		vote: s.text({ mode: "json" }).$type<VoteType>().notNull(),
+		timestamp: s.integer({ mode: "timestamp_ms" }).notNull(),
 	},
 	(t) => [s.primaryKey({ columns: [t.student, t.campaign] })],
 );

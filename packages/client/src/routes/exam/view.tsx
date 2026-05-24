@@ -6,10 +6,9 @@ import {
 	GetVotingCampaignsResponse,
 	type ExamType,
 	type PreparationMaterialsType,
-	type VotingCampaignsType,
-	type VotingCampaignType,
 	CAMPAIGN_STATUSES_MESSAGES,
 	CAMPAIGN_TYPES_MESSAGES,
+	type ExtendedVotingCampaignType,
 } from "@exsit/shared/types/exams";
 import { Button, Card, Chip, Link, ScrollShadow, Separator, Spinner, Tabs } from "@heroui/react";
 import { Icon } from "@iconify/react";
@@ -72,7 +71,7 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 	);
 }
 
-function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
+function CampaignCard(props: { id: string; campaign: ExtendedVotingCampaignType[string] }) {
 	const navigate = useNavigate();
 
 	return (
@@ -91,7 +90,18 @@ function CampaignCard(props: { id: string; campaign: VotingCampaignType }) {
 					</Card.Title>
 				</Card.Header>
 				<Card.Content className="text-muted flex w-full flex-row gap-2">
-					<p>{CAMPAIGN_STATUSES_MESSAGES[props.campaign.status]}</p>
+					<p>
+						{CAMPAIGN_STATUSES_MESSAGES[props.campaign.status]}.
+						{props.campaign.status === "voting_started" && (
+							<>
+								{" "}
+								Проголосовало{" "}
+								<b>
+									{props.campaign.voted}/{props.campaign.total}
+								</b>{" "}
+							</>
+						)}
+					</p>
 				</Card.Content>
 			</Card>
 		</Pressable>
@@ -112,7 +122,9 @@ export default function ViewExamDetailsRoute() {
 	const [examQuestionsMaterials, setExamQuestionsMaterials] = useState<
 		PreparationMaterialsType | undefined
 	>(undefined);
-	const [examCampaigns, setExamCampaigns] = useState<VotingCampaignsType | undefined>(undefined);
+	const [examCampaigns, setExamCampaigns] = useState<ExtendedVotingCampaignType | undefined>(
+		undefined,
+	);
 
 	const examDetailsFetch = useQuery({
 		queryKey: ["get-exam", params.exam],
@@ -218,7 +230,7 @@ export default function ViewExamDetailsRoute() {
 		examCampaignsFetch.isFetching;
 
 	return (
-		<div className="relative flex h-dvh w-dvw flex-col items-center justify-center p-4">
+		<div className="relative flex min-h-dvh w-dvw flex-col items-center justify-center p-4">
 			{loading ? (
 				<Spinner />
 			) : (

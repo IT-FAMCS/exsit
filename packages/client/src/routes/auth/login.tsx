@@ -76,7 +76,7 @@ export default function LoginRoute() {
 	}, [loginFetch, navigate]);
 
 	return (
-		<div className="flex h-dvh w-dvw flex-col items-center justify-center p-4">
+		<div className="flex min-h-dvh w-dvw flex-col items-center justify-center p-4">
 			<div className="flex max-w-sm flex-col items-center justify-center gap-6">
 				<Logo className="text-accent w-full" />
 

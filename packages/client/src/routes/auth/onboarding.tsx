@@ -88,7 +88,7 @@ export default function OnboardingRoute() {
 	}, [changePasswordFetch]);
 
 	return (
-		<div className="relative flex h-dvh w-dvw items-center justify-center p-4">
+		<div className="relative flex min-h-dvh w-dvw items-center justify-center p-4">
 			{step === "welcome" && (
 				<div className="flex w-sm flex-col items-center justify-center gap-4">
 					<p className="text-4xl font-bold">Добро пожаловать в</p>
