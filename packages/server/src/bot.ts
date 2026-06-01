@@ -2,10 +2,11 @@ import { Bot, InputFile } from "grammy";
 import { votingCampaigns } from "./db/schema/exams";
 import { getExamById } from "./db/actions/exams";
 import { getGroupById, getGroupIdByExam, getGroupStudents } from "./db/actions/groups";
-import { CAMPAIGN_TYPES_MESSAGES } from "@exsit/shared/types/exams";
+import { CAMPAIGN_TYPES_MESSAGES, VotingCampaignStateType } from "@exsit/shared/types/exams";
 import { NotifyGroupRequest, NotifyGroupResponse } from "@exsit/shared/types/admin";
 import z from "zod";
 import { ok } from "@exsit/shared/types/api";
+import { getVotingCampaignById, setCampaignStatusMessage } from "./db/actions/campaigns";
 
 let bot: Bot | null = null;
 export const startBot = async () => {
@@ -51,6 +52,42 @@ export const sendVotingCampaignStartedMessage = async (
 	await bot.api.sendMessage(
 		group.notificationChannel,
 		`<u><b>${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}</b></u>\nГолосование начато! <a href="${process.env.FRONTEND_HOSTNAME}/vote/${campaign.id}">Ссылка на голосование</a>\n<tg-spoiler>${group.publicCode}</tg-spoiler>`,
+		{ parse_mode: "HTML" },
+	);
+
+	if (campaign.state.type === "random_select") {
+		const message = await bot.api.sendMessage(group.notificationChannel, "секунду...", {
+			parse_mode: "HTML",
+		});
+		await setCampaignStatusMessage(campaign.id, message.message_id);
+		await updateRandomSelectCampaignStatusMessage((await getVotingCampaignById(campaign.id))!);
+	}
+};
+
+export const updateRandomSelectCampaignStatusMessage = async (
+	campaign: (typeof votingCampaigns)["$inferSelect"],
+) => {
+	if (
+		campaign.state.type !== "random_select" ||
+		campaign.options.type !== "random_select" ||
+		!campaign.state.statusMessage
+	)
+		return;
+	const exam = await getExamById(campaign.exam);
+	const group = await getGroupById((await getGroupIdByExam(campaign.exam)) ?? "");
+	const students = await getGroupStudents(group?.id ?? "");
+	if (!bot || !exam || !group || !group.notificationChannel || !students) return;
+
+	const state = campaign.state as Extract<VotingCampaignStateType, { type: "random_select" }>;
+	const list = Array.from({ length: students.length }, (_, i) =>
+		state.current === i
+			? `<b>${i + 1}. ${students[state.order[i]].fullName} 👈</b>`
+			: `${i + 1}. ${students[state.order[i]].fullName}`,
+	).join("\n");
+	await bot.api.editMessageText(
+		group.notificationChannel,
+		campaign.state.statusMessage,
+		`<u><b>${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}</b></u>\n\n${list}\n\n<a href="${process.env.FRONTEND_HOSTNAME}/vote/${campaign.id}">Ссылка на голосование</a>\n<tg-spoiler>${group.publicCode}</tg-spoiler>`,
 		{ parse_mode: "HTML" },
 	);
 };

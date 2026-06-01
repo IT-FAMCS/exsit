@@ -139,8 +139,22 @@ export const startVotingCampaign = async (
 			.where(eq(votingCampaigns.id, campaign.id));
 	}
 
-	await sendVotingCampaignStartedMessage(campaign);
+	await sendVotingCampaignStartedMessage((await getVotingCampaignById(campaignId))!);
 	return ok(null);
+};
+
+export const setCampaignStatusMessage = async (campaignId: string, statusMessage: number) => {
+	const campaign = (await getVotingCampaignById(campaignId))!;
+	if (campaign.options.type !== "random_select" || campaign.state.type !== "random_select") return;
+	await db
+		.update(votingCampaigns)
+		.set({
+			state: {
+				...campaign.state,
+				statusMessage,
+			} satisfies VotingCampaignStateType,
+		})
+		.where(eq(votingCampaigns.id, campaign.id));
 };
 
 export const stopVotingCampaign = async (

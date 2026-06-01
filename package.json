@@ -5,7 +5,9 @@
   "scripts": {
     "lint": "oxlint .",
     "format": "oxfmt .",
-    "dev": "concurrently --kill-others --handle-input --names server,client \"pnpm run --filter @exsit/server watch\" \"pnpm run --filter @exsit/client dev\""
+    "dev": "concurrently --kill-others --handle-input --names client,server \"pnpm run --filter @exsit/client dev\" \"pnpm run --filter @exsit/server watch\"",
+    "prod": "concurrently --kill-others --handle-input --names client,server \"pnpm run --filter @exsit/client preview\" \"pnpm run --filter @exsit/server start\""
+
   },
   "author": "nedoxff",
   "license": "AGPL-3.0-only",

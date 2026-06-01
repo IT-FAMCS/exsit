@@ -110,6 +110,7 @@ export const VotingCampaignState = z.discriminatedUnion("type", [
 		type: z.literal("random_select"),
 		order: z.array(z.number()),
 		current: z.number(),
+		statusMessage: z.number().optional(),
 	}),
 	z.object({
 		type: z.literal("hungarian"),

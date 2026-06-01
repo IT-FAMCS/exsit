@@ -70,6 +70,13 @@ process.once("SIGINT", async () => {
 	process.exit(0);
 });
 
-serve(app, (info) => {
-	console.log(`server running at ${info.address}:${info.port}`);
-});
+serve(
+	{
+		fetch: app.fetch,
+		port: 3000,
+		hostname: "127.0.0.1",
+	},
+	(info) => {
+		console.log(`server running at ${info.address}:${info.port}`);
+	},
+);

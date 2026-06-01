@@ -22,7 +22,7 @@ import {
 } from "./campaigns";
 import { eq, and, inArray, count, sql } from "drizzle-orm";
 import { groups, students } from "../schema/users";
-import { sendCasinoIntermediateRoundMessage } from "@/bot";
+import { sendCasinoIntermediateRoundMessage, updateRandomSelectCampaignStatusMessage } from "@/bot";
 
 export const cleanupStaleVotingTransactions = async () => {
 	await db.transaction(async (tx) => {
@@ -123,7 +123,7 @@ export const getTransactionInformation = async (id: string) =>
 
 			switch (campaign.options.type) {
 				case "random_select": {
-					const state = campaign.state as Extract<
+					const { statusMessage: _, ...state } = campaign.state as Extract<
 						VotingCampaignStateType,
 						{ type: "random_select" }
 					>;
@@ -167,7 +167,7 @@ export const getTransactionInformation = async (id: string) =>
 								{ campaignType: "casino" }
 						  >["sharedDistribution"]
 						| undefined = undefined;
-					if (previousVotes.length !== 0) {
+					if (previousVotes.length !== 0 && campaign.state.round !== 1) {
 						sharedDistribution = {};
 						for (let i = 1; i <= groupStudents.length; i++) {
 							const filtered = previousVotes.filter((v) =>
@@ -244,11 +244,16 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 
 				// update current
 				if (state.current === students.length - 1) extra.stopCampaign = campaign.id;
-				else
+				else {
 					await tx
 						.update(votingCampaigns)
 						.set({ state: { ...state, current: state.current + 1 } })
 						.where(eq(votingCampaigns.id, campaign.id));
+					await updateRandomSelectCampaignStatusMessage({
+						...campaign,
+						state: { ...state, current: state.current + 1 },
+					});
+				}
 				break;
 			}
 			case "hungarian": {
