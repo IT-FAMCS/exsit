@@ -58,7 +58,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!requestVotingTransactionFetch.data) return;
 		defaultHandler(requestVotingTransactionFetch.data, {
-			onApiError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate("/")),
 			errorMessages: {
 				adminsCannotVote: "Администратор не может участвовать в голосовании!",
 				campaignNotStarted: "Голосование не начато!",
@@ -74,7 +74,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!getVotingTransactionInfoFetch.data) return;
 		defaultHandler(getVotingTransactionInfoFetch.data, {
-			onApiError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate("/")),
 			errorMessages: {
 				invalidCampaignID: "Неверный ID голосования",
 				invalidExamID: "Неверный ID экзамена",
@@ -88,7 +88,7 @@ export default function VoteRoute() {
 	useEffect(() => {
 		if (!castVoteFetch.data) return;
 		defaultHandler(castVoteFetch.data, {
-			onApiError: () => queueMicrotask(() => navigate(-1)),
+			onApiError: () => queueMicrotask(() => navigate("/")),
 			errorMessages: {
 				invalidCampaignID: "Неверный ID голосования",
 				invalidExamID: "Неверный ID экзамена",
@@ -99,7 +99,7 @@ export default function VoteRoute() {
 			onSuccess: () => {
 				sessionStorage.setItem("celebrate", "true");
 				toast.success("Голос успешно принят. Спасибо!");
-				queueMicrotask(() => navigate(-1));
+				queueMicrotask(() => navigate("/"));
 			},
 		});
 	}, [castVoteFetch, navigate]);

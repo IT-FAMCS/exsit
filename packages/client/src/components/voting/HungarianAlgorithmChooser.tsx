@@ -49,7 +49,7 @@ export default function HungarianAlgorithmChooser(props: {
 				</TagGroup.List>
 			</TagGroup>
 			<div className="flex w-full flex-row items-center justify-center gap-2">
-				<Button variant="secondary" onPress={() => queueMicrotask(() => navigate(-1))}>
+				<Button variant="secondary" onPress={() => queueMicrotask(() => navigate("/"))}>
 					<Icon icon="mdi:chevron-left" /> Назад
 				</Button>
 				<AlertDialog>
