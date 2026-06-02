@@ -38,11 +38,15 @@ export const stopBot = async () => {
 
 export const setBotProfilePicture = async () => {
 	if (!bot) return;
-	const index = new Date().getDay() % 4;
-	await bot.api.setMyProfilePhoto({
-		type: "static",
-		photo: new InputFile(`./assets/pfps/${index}.jpg`),
-	});
+	try {
+		const index = new Date().getDay() % 4;
+		await bot.api.setMyProfilePhoto({
+			type: "static",
+			photo: new InputFile(`./assets/pfps/${index}.jpg`),
+		});
+	} catch (ex) {
+		console.error(`failed to set profile picture: ${ex}`);
+	}
 };
 
 export const sendVotingCampaignStartedMessage = async (
