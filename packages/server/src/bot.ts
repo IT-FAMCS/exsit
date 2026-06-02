@@ -12,7 +12,9 @@ let bot: Bot | null = null;
 export const startBot = async () => {
 	if (!process.env.TELEGRAM_TOKEN) return;
 
-	bot = new Bot(process.env.TELEGRAM_TOKEN);
+	bot = new Bot(process.env.TELEGRAM_TOKEN, {
+		client: { apiRoot: process.env.TELEGRAM_API_ROOT ?? "https://api.telegram.org" },
+	});
 	bot.on("msg", async (ctx) => {
 		if (ctx.chat.type === "private")
 			ctx.reply(":3", { reply_parameters: { message_id: ctx.msgId } });
