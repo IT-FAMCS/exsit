@@ -137,6 +137,7 @@ export const getTransactionInformation = async (id: string) =>
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
 						supposedOrder,
 						takenSeats,
+						exam: campaign.exam,
 					});
 				}
 				case "hungarian":
@@ -145,6 +146,7 @@ export const getTransactionInformation = async (id: string) =>
 						pickAmount: campaign.options.pickAmount,
 						groupSize: groupStudents.length,
 						supposedOrder,
+						exam: campaign.exam,
 					});
 				case "casino": {
 					if (campaign.options.type !== "casino" || campaign.state.type !== "casino")
@@ -188,6 +190,7 @@ export const getTransactionInformation = async (id: string) =>
 						rounds: { current: campaign.state.round, total: campaign.options.rounds },
 						personalDistribution,
 						sharedDistribution,
+						exam: campaign.exam,
 					});
 				}
 				case "ttc": {

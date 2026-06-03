@@ -65,7 +65,10 @@ export default function RandomSelectAlgorithmChooser(props: {
 			)}
 
 			<div className="flex w-full flex-row items-center justify-center gap-2">
-				<Button variant="secondary" onPress={() => queueMicrotask(() => navigate("/"))}>
+				<Button
+					variant="secondary"
+					onPress={() => queueMicrotask(() => navigate(`/exam/${props.info.exam}`))}
+				>
 					<Icon icon="mdi:chevron-left" /> Назад
 				</Button>
 				{auth.id === turn && (

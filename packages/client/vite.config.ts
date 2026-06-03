@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => {
 		server: {
 			port: Number(env.PORT),
 			strictPort: true,
-			allowedHosts: [env.HOSTNAME],
 		},
 		resolve: {
 			alias: {

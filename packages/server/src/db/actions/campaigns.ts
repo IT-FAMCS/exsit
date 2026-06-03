@@ -23,6 +23,7 @@ import {
 	sendVotingCampaignStoppedMessage,
 } from "@/bot";
 import { VOTING_CAMPAIGN_CALCULATORS } from "./calculators/shared";
+import { GetAllCampaignVotesResponse } from "@exsit/shared/types/admin";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
 export const getVotingCampaignById = async (id: string) =>
@@ -197,3 +198,13 @@ export const calculateVotingCampaignResults = async (
 	}
 	return result;
 };
+
+export const getVotingCampaignVotes = async (
+	campaignId: string,
+): Promise<z.input<typeof GetAllCampaignVotesResponse>> =>
+	ok(
+		(await db.select().from(votes).where(eq(votes.campaign, campaignId))).map((v) => ({
+			student: v.student,
+			vote: v.vote,
+		})),
+	);

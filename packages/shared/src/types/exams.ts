@@ -101,6 +101,7 @@ export const VotingTransactionInformation = z
 	.and(
 		z.object({
 			supposedOrder: SupposedOrder,
+			exam: z.string(),
 		}),
 	);
 export type VotingTransactionInformationType = z.infer<typeof VotingTransactionInformation>;

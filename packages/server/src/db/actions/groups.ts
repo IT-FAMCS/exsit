@@ -1,4 +1,8 @@
-import { CreateGroupRequest, CreateGroupResponse } from "@exsit/shared/types/admin";
+import {
+	CreateGroupRequest,
+	CreateGroupResponse,
+	GetAllGroupsResponse,
+} from "@exsit/shared/types/admin";
 import { z } from "zod";
 import { ulid } from "ulid";
 import { db } from "../connection";
@@ -47,3 +51,13 @@ export const createGroup = async (
 	});
 	return ok(id);
 };
+
+export const getAllGroupCodes = async (): Promise<z.input<typeof GetAllGroupsResponse>> =>
+	ok(
+		Object.fromEntries(
+			(await db.select({ id: groups.id, publicCode: groups.publicCode }).from(groups)).map((g) => [
+				g.id,
+				g.publicCode,
+			]),
+		),
+	);

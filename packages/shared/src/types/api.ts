@@ -28,7 +28,7 @@ export const createApiSchema = <
 			}),
 
 			z.object({
-				error: (options.errors ?? z.enum([])) as TOE,
+				error: (options.errors ?? z.enum(["__no_custom_errors__"])) as TOE,
 				details: z.unknown().optional(),
 			}),
 		]),

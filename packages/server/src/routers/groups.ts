@@ -1,4 +1,4 @@
-import { createGroup, groupExists } from "@/db/actions/groups";
+import { createGroup, getAllGroupCodes, groupExists } from "@/db/actions/groups";
 import { addStudentsToGroup } from "@/db/actions/users";
 import { requireExisting, zValidator } from "@/utils/hono";
 import {
@@ -19,6 +19,7 @@ const requireExistingGroup = requireExisting("group", "invalidGroupCode", groupE
 export const groupRouter = new Hono<{ Variables: JwtVariables }>()
 	.use("*", except("/groups/:group/exams", requireAdminPermissions))
 
+	.get("/get-all", async (c) => c.json(await getAllGroupCodes()))
 	.post("/create", zValidator("json", CreateGroupRequest), async (c) =>
 		c.json(await createGroup(c.req.valid("json"))),
 	)

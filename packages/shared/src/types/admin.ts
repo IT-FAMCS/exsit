@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createApiSchema } from "./api";
+import { Vote } from "./exams";
 
 export const [CreateGroupRequest, CreateGroupResponse] = createApiSchema({
 	request: z.object({
@@ -44,4 +45,12 @@ export const [NotifyGroupRequest, NotifyGroupResponse] = createApiSchema({
 	}),
 	response: z.null(),
 	errors: z.enum(["invalidGroupID", "notificationsDisabled"]),
+});
+
+export const [, GetAllGroupsResponse] = createApiSchema({
+	response: z.record(z.string(), z.string()),
+});
+
+export const [, GetAllCampaignVotesResponse] = createApiSchema({
+	response: z.array(z.object({ student: z.string(), vote: Vote })),
 });

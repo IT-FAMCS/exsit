@@ -17,7 +17,10 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 		onApiError?: (code: SchemaErrorsType<TOut>) => void;
 		onFetchError?: (type: "fetch" | "malformed_response") => void;
 		showToast?: boolean;
-		errorMessages?: Record<Exclude<SchemaErrorsType<TOut>, "validation" | "internal">, string>;
+		errorMessages?: Record<
+			Exclude<SchemaErrorsType<TOut>, "validation" | "internal" | "__no_custom_errors__">,
+			string
+		>;
 	},
 ) => {
 	if (result.ok) {
@@ -106,7 +109,7 @@ export const expandedFetch = async <TOut extends AnyAPIResponseSchema>(
 		return { ok: false, error: "fetch", exception, meta };
 	}
 
-	const parseResult = options.output.safeParse(json);
+	const parseResult = await options.output.safeParseAsync(json);
 	if (!parseResult.success)
 		return { ok: false, error: "malformed_response", parseErrors: parseResult.error, meta };
 	if (parseResult.data.error !== null)

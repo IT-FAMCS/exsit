@@ -99,10 +99,10 @@ export default function VoteRoute() {
 			onSuccess: () => {
 				sessionStorage.setItem("celebrate", "true");
 				toast.success("Голос успешно принят. Спасибо!");
-				queueMicrotask(() => navigate("/"));
+				queueMicrotask(() => navigate(`/exam/${transactionInfo!.exam}`));
 			},
 		});
-	}, [castVoteFetch, navigate]);
+	}, [castVoteFetch, navigate, transactionInfo]);
 
 	useEffect(() => {
 		setTransactionToken(undefined);
