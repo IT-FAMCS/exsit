@@ -20,9 +20,9 @@ export default function RandomSelectAlgorithmChooser(props: {
 
 	if (!auth) return null;
 	const index = props.info.order.at(props.info.current);
-	if (!index) return <ErrorWall text="Сервер вернул неправильные данные (index)" />;
+	if (index === undefined) return <ErrorWall text="Сервер вернул неправильные данные (index)" />;
 	const turn = groupArray.at(index)?.[0];
-	if (!turn) return <ErrorWall text="Сервер вернул неправильные данные (turn)" />;
+	if (turn === undefined) return <ErrorWall text="Сервер вернул неправильные данные (turn)" />;
 
 	return (
 		<div className="flex max-w-md flex-col items-center gap-4">

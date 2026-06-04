@@ -5,7 +5,6 @@ type Bid = {
 	student: string;
 	seat: number;
 	points: number;
-	timestamp: number;
 };
 
 export const calculateCasinoResults: VotingCampaignCalculator = async (meta) => {
@@ -16,6 +15,16 @@ export const calculateCasinoResults: VotingCampaignCalculator = async (meta) => 
 	if (votes.length !== meta.group.length) return calculationError("not everyone voted");
 	const { exemptions, other } = filterVotes(meta.votes);
 
+	const profiles: Record<string, { sum: number; count: number }> = {};
+	for (const [student, vote] of Object.entries(other)) {
+		if (vote.campaignType !== "casino") continue;
+		const points = Object.values(vote.distribution).reduce(
+			(sum, points) => sum + points * points,
+			0,
+		);
+		profiles[student] = { sum: points, count: Object.keys(vote.distribution).length };
+	}
+
 	const bids: Bid[] = [];
 	for (const [student, vote] of Object.entries(other)) {
 		if (vote.campaignType !== "casino")
@@ -25,10 +34,16 @@ export const calculateCasinoResults: VotingCampaignCalculator = async (meta) => 
 				student,
 				seat,
 				points: vote.distribution[seat] ?? 0,
-				timestamp: meta.timestamps[student]?.getTime() ?? Date.now(),
 			});
 	}
-	bids.sort((a, b) => b.points - a.points || a.timestamp - b.timestamp);
+	bids.sort((a, b) => {
+		if (a.points !== b.points) return b.points - a.points;
+		const pa = profiles[a.student]!;
+		const pb = profiles[b.student]!;
+		if (pa.sum !== pb.sum) return pb.sum - pa.sum;
+		else if (pa.count !== pb.count) return pa.count - pb.count;
+		return a.student.localeCompare(b.student);
+	});
 
 	const assignedSeats = new Map<number, string>();
 	const assignedStudents = new Set<string>();
@@ -62,5 +77,6 @@ export const calculateCasinoResults: VotingCampaignCalculator = async (meta) => 
 
 	const rawOrder = Array.from({ length: meta.group.length }, (_, i) => assignedSeats.get(i + 1)!);
 	const order = rawOrder.filter((o) => !Object.keys(exemptions).includes(o));
+	notes.push(JSON.stringify(profiles));
 	return ok({ order, exemptions: Object.keys(exemptions), notes });
 };

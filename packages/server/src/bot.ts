@@ -125,8 +125,10 @@ export const sendVotingCampaignResultsMessage = async (
 		contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.order[idx])?.fullName}\n`;
 
 	contents += "\n<b>Автоматы:</b>\n";
-	for (let idx = 0; idx < campaign.result.exemptions.length; idx++)
-		contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.exemptions[idx])?.fullName}\n`;
+	if (campaign.result.exemptions.length !== 0)
+		for (let idx = 0; idx < campaign.result.exemptions.length; idx++)
+			contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.exemptions[idx])?.fullName}\n`;
+	else contents += "отсутствуют\n";
 
 	contents += `\n${campaign.result.notes.map((n) => `💭 ${n}`).join("\n")}${campaign.result.notes.length !== 0 ? "\n" : ""}`;
 

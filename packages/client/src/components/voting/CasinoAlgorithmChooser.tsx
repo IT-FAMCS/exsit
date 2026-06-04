@@ -168,6 +168,26 @@ export default function CasinoAlgorithmChooser(props: {
 				</AlertDialog>
 			)}
 
+			<Card>
+				<Card.Header>
+					<Card.Title>Замечание</Card.Title>
+					<Card.Description>
+						Чтобы проголосовать необходимо потратить все баллы (<b>{props.info.availablePoints}</b>
+						). Места, на которые сделаны ставка, будут подсвечиваться.
+						{props.info.rounds.current !== 1 && (
+							<>
+								<br />
+								<br />
+								<span>
+									Справа сверху показано количество людей, кто хочет это место. Нажав на само место
+									можно посмотреть наивысшую ставку или сделать свою.
+								</span>
+							</>
+						)}
+					</Card.Description>
+				</Card.Header>
+			</Card>
+
 			<Modal.Backdrop
 				isOpen={betModalState.isOpen}
 				onOpenChange={(open) => {
@@ -232,7 +252,7 @@ export default function CasinoAlgorithmChooser(props: {
 											</b>
 										</p>
 										{betAmount === props.info.availablePoints && (
-											<p className="text-danger">Надеюсь, ты осознаёшь, что делаешь.</p>
+											<p className="text-danger">Надеюсь, ты знаешь, что делаешь.</p>
 										)}
 									</>
 								) : (

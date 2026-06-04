@@ -152,35 +152,20 @@ export const getTransactionInformation = async (id: string) =>
 					if (campaign.options.type !== "casino" || campaign.state.type !== "casino")
 						return { error: "internal", details: "corrupted campaign options/state" };
 
-					const previousVotes = (
-						await tx
-							.select()
-							.from(votes)
-							.where(and(eq(votes.campaign, campaign.id)))
-					).filter((v) => v.vote.campaignType === "casino") as ((typeof votes)["$inferSelect"] & {
-						vote: Extract<VoteType, { campaignType: "casino" }>;
-					})[];
-
-					const personalDistribution = previousVotes.find((v) => v.student === transaction.student)
-						?.vote.distribution;
-					let sharedDistribution:
-						| Extract<
-								z.input<typeof VotingTransactionInformation>,
-								{ campaignType: "casino" }
-						  >["sharedDistribution"]
-						| undefined = undefined;
-					if (previousVotes.length !== 0 && campaign.state.round !== 1) {
-						sharedDistribution = {};
-						for (let i = 1; i <= groupStudents.length; i++) {
-							const filtered = previousVotes.filter((v) =>
-								Object.keys(v.vote.distribution).includes(i.toString()),
-							);
-							sharedDistribution[i] = {
-								amount: filtered.length,
-								max: Math.max(...filtered.map((v) => v.vote.distribution[i])),
-							};
-						}
-					}
+					const personalDistribution = (
+						(
+							await tx
+								.select()
+								.from(votes)
+								.where(and(eq(votes.campaign, campaign.id), eq(votes.student, transaction.student)))
+						)
+							.filter((v) => v.vote.campaignType === "casino")
+							?.at(0) as
+							| ((typeof votes)["$inferSelect"] & {
+									vote: Extract<VoteType, { campaignType: "casino" }>;
+							  })
+							| undefined
+					)?.vote.distribution;
 
 					return ok({
 						campaignType: "casino",
@@ -189,7 +174,7 @@ export const getTransactionInformation = async (id: string) =>
 						supposedOrder,
 						rounds: { current: campaign.state.round, total: campaign.options.rounds },
 						personalDistribution,
-						sharedDistribution,
+						sharedDistribution: campaign.state.previousRoundDistribution,
 						exam: campaign.exam,
 					});
 				}
@@ -316,11 +301,38 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 				state.distribution[transaction.student] = req.distribution;
 				if (roundVotes + 1 === students.length) {
 					if (state.round !== options.rounds) {
+						const previousVotes = (
+							await tx
+								.select()
+								.from(votes)
+								.where(and(eq(votes.campaign, campaign.id)))
+						).filter((v) => v.vote.campaignType === "casino") as ((typeof votes)["$inferSelect"] & {
+							vote: Extract<VoteType, { campaignType: "casino" }>;
+						})[];
+
+						let sharedDistribution: Extract<
+							z.input<typeof VotingTransactionInformation>,
+							{ campaignType: "casino" }
+						>["sharedDistribution"] = {};
+						for (let i = 1; i <= students.length; i++) {
+							const filtered = previousVotes.filter((v) =>
+								Object.keys(v.vote.distribution).includes(i.toString()),
+							);
+							sharedDistribution[i] = {
+								amount: filtered.length,
+								max: Math.max(...filtered.map((v) => v.vote.distribution[i])),
+							};
+						}
+						await tx
+							.update(votingCampaigns)
+							.set({ state: { ...state, previousRoundDistribution: sharedDistribution } })
+							.where(eq(votingCampaigns.id, campaign.id));
+
 						await sendCasinoIntermediateRoundMessage(campaign);
 						state.round++;
 					} else extra.stopCampaign = campaign.id;
 				}
-				console.log(roundVotes + 1, students.length, state);
+
 				await tx.update(votingCampaigns).set({ state }).where(eq(votingCampaigns.id, campaign.id));
 				break;
 			}

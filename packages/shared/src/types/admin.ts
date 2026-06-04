@@ -52,5 +52,5 @@ export const [, GetAllGroupsResponse] = createApiSchema({
 });
 
 export const [, GetAllCampaignVotesResponse] = createApiSchema({
-	response: z.array(z.object({ student: z.string(), vote: Vote })),
+	response: z.array(z.object({ student: z.string(), vote: Vote, timestamp: z.coerce.date() })),
 });

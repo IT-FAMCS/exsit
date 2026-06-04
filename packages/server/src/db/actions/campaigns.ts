@@ -10,7 +10,7 @@ import {
 	StopVotingCampaignResponse,
 	CalculateVotingCampaignResultsResponse,
 } from "@exsit/shared/types/exams";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import z from "zod";
 import { db } from "../connection";
 import { votes, votingCampaigns } from "../schema/exams";
@@ -34,17 +34,14 @@ export const getVotingCampaignStatistics = async (
 ): Promise<{ started?: string; stopped?: string; voted: number; total: number } | undefined> => {
 	const total = await getGroupSize((await getGroupIdByExam(campaign.exam)) ?? "");
 	if (total === undefined) return undefined;
-
-	const voted = (
-		await db.select({ count: count() }).from(votes).where(eq(votes.campaign, campaign.id))
-	)?.at(0)?.count;
-	if (voted === undefined) return undefined;
+	const voted = await getVotingCampaignVotes(campaign.id);
+	if (voted.error !== null) return undefined;
 
 	return {
 		started: campaign.started?.toISOString(),
 		stopped: campaign.stopped?.toISOString(),
 		total,
-		voted,
+		voted: voted.data.length,
 	};
 };
 
@@ -201,10 +198,21 @@ export const calculateVotingCampaignResults = async (
 
 export const getVotingCampaignVotes = async (
 	campaignId: string,
-): Promise<z.input<typeof GetAllCampaignVotesResponse>> =>
-	ok(
-		(await db.select().from(votes).where(eq(votes.campaign, campaignId))).map((v) => ({
+): Promise<z.input<typeof GetAllCampaignVotesResponse>> => {
+	const campaign = (await getVotingCampaignById(campaignId))!;
+	let rawVotes = await db.select().from(votes).where(eq(votes.campaign, campaign.id));
+	if (campaign.state.type === "casino")
+		rawVotes = rawVotes.filter(
+			(rv) =>
+				rv.vote.campaignType === "casino" &&
+				rv.vote.round ===
+					(campaign.state as Extract<VotingCampaignStateType, { type: "casino" }>).round,
+		);
+	return ok(
+		rawVotes.map((v) => ({
 			student: v.student,
 			vote: v.vote,
+			timestamp: v.timestamp,
 		})),
 	);
+};

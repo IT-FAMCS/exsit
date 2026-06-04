@@ -120,6 +120,9 @@ export const VotingCampaignState = z.discriminatedUnion("type", [
 		type: z.literal("casino"),
 		round: z.number(),
 		distribution: z.record(z.string(), z.record(z.number(), z.number())),
+		previousRoundDistribution: z
+			.record(z.number(), z.object({ amount: z.number(), max: z.number().nullable() }))
+			.optional(),
 	}),
 	z.object({
 		type: z.literal("ttc"),
