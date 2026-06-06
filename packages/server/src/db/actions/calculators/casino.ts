@@ -77,6 +77,5 @@ export const calculateCasinoResults: VotingCampaignCalculator = async (meta) => 
 
 	const rawOrder = Array.from({ length: meta.group.length }, (_, i) => assignedSeats.get(i + 1)!);
 	const order = rawOrder.filter((o) => !Object.keys(exemptions).includes(o));
-	notes.push(JSON.stringify(profiles));
 	return ok({ order, exemptions: Object.keys(exemptions), notes });
 };
