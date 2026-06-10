@@ -239,6 +239,10 @@ export const [CreateExamRequest, CreateExamResponse] = createApiSchema({
 	errors: z.enum(["invalidGroupCode"]),
 });
 
+export const [, RemoveExamResponse] = createApiSchema({
+	errors: z.enum(["invalidGroupCode", "invalidExamID"]),
+});
+
 export const [, GetExamsResponse] = createApiSchema({
 	response: z.record(z.string(), Exam),
 	errors: z.enum(["invalidGroupCode"]),

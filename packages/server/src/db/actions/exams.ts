@@ -9,6 +9,7 @@ import {
 	UploadPreparationMaterialResponse,
 	GetExamsResponse,
 	PreparationMaterial,
+	RemoveExamResponse,
 } from "@exsit/shared/types/exams";
 import z from "zod";
 import { db } from "../connection";
@@ -42,6 +43,12 @@ export const createExam = async (
 		...req,
 	});
 	return ok(id);
+};
+
+export const removeExam = async (exam: string): Promise<z.input<typeof RemoveExamResponse>> => {
+	if (!examExists(exam)) return { error: "invalidExamID" };
+	await db.delete(exams).where(eq(exams.id, exam));
+	return ok(null);
 };
 
 export type DatabaseExam = (typeof exams)["$inferSelect"];

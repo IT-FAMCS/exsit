@@ -2,6 +2,7 @@ import {
 	examExists,
 	getExamById,
 	getPreparationMaterials,
+	removeExam,
 	removePreparationMaterial,
 	uploadPreparationMaterial,
 } from "@/db/actions/exams";
@@ -41,6 +42,7 @@ export const examRouter = new Hono<{ Variables: JwtVariables }>()
 			>,
 		);
 	})
+	.delete("/:id/remove", async (c) => c.json(await removeExam(c.req.param("id"))))
 	.get("/:id/materials", zValidator("query", GetPreparationMaterialsRequest), async (c) =>
 		c.json(await getPreparationMaterials(c.req.param("id"), c.req.valid("query").tag)),
 	)
