@@ -10,6 +10,7 @@ import { calculateCasinoResults } from "./casino";
 import { calculateHungarianResults } from "./hungarian";
 import { calculateRandomSelectResults } from "./random-select";
 import { calculateTtcResults } from "./ttc";
+import { calculatePokerResults } from "./poker";
 
 export type VotingCampaignCalculatorMetadata = {
 	group: (typeof students)["$inferSelect"][];
@@ -30,6 +31,7 @@ export const VOTING_CAMPAIGN_CALCULATORS: Record<
 	hungarian: calculateHungarianResults,
 	random_select: calculateRandomSelectResults,
 	ttc: calculateTtcResults,
+	poker: calculatePokerResults,
 };
 
 export const filterVotes = (

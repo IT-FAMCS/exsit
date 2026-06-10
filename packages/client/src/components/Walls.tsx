@@ -6,7 +6,7 @@ export function ErrorWall(props: { text?: string }) {
 	const navigate = useNavigate();
 	return (
 		<div className="flex min-h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
-			<Icon icon="mdi:alert-circle-outline" />
+			<Icon width={48} className="text-muted" icon="mdi:alert-circle-outline" />
 			{props.text && <p className="text-muted text-center">{props.text}</p>}
 			<Button onPress={() => navigate("/")}>
 				<Icon icon="mdi:home-outline" /> Вернуться на главную

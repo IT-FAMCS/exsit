@@ -24,6 +24,8 @@ import {
 } from "@/bot";
 import { VOTING_CAMPAIGN_CALCULATORS } from "./calculators/shared";
 import { GetAllCampaignVotesResponse } from "@exsit/shared/types/admin";
+import schedule from "node-schedule";
+import parseDuration from "parse-duration";
 
 export const votingCampaignExists = async (id: string) => !!(await getVotingCampaignById(id));
 export const getVotingCampaignById = async (id: string) =>
@@ -73,6 +75,8 @@ const getInitialState = (
 			return { type: "casino", distribution: {}, round: 1 };
 		case "ttc":
 			return { type: "ttc", seats: {}, state: "select" };
+		case "poker":
+			return { type: "poker" };
 	}
 };
 
@@ -115,7 +119,7 @@ export const startVotingCampaign = async (
 ): Promise<z.input<typeof StartVotingCampaignResponse>> => {
 	await db
 		.update(votingCampaigns)
-		.set({ status: "voting_started" })
+		.set({ status: "voting_started", started: new Date() })
 		.where(eq(votingCampaigns.id, campaignId));
 
 	const campaign = (await getVotingCampaignById(campaignId))!;
@@ -135,6 +139,14 @@ export const startVotingCampaign = async (
 				} satisfies VotingCampaignStateType,
 			})
 			.where(eq(votingCampaigns.id, campaign.id));
+	}
+
+	if (campaign.options.duration) {
+		const parsedDuration = parseDuration(campaign.options.duration);
+		if (parsedDuration)
+			schedule.scheduleJob(new Date(Date.now() + parsedDuration), () =>
+				stopVotingCampaign(campaignId),
+			);
 	}
 
 	await sendVotingCampaignStartedMessage((await getVotingCampaignById(campaignId))!);
@@ -158,12 +170,14 @@ export const setCampaignStatusMessage = async (campaignId: string, statusMessage
 export const stopVotingCampaign = async (
 	campaignId: string,
 ): Promise<z.input<typeof StopVotingCampaignResponse>> => {
+	const campaign = await getVotingCampaignById(campaignId);
+	if (!campaign) return { error: "invalidCampaignID" };
+	if (campaign.status === "voting_ended") return ok(null);
+
 	await db
 		.update(votingCampaigns)
 		.set({ status: "voting_ended" })
 		.where(eq(votingCampaigns.id, campaignId));
-
-	const campaign = (await getVotingCampaignById(campaignId))!;
 	await sendVotingCampaignStoppedMessage(campaign);
 	return ok(null);
 };

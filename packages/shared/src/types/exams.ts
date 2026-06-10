@@ -6,13 +6,20 @@ export const MATERIALS_TAGS = ["questions"] as const;
 export const MATERIALS_TYPES = ["file", "link"] as const;
 
 export const CAMPAIGN_STATUSES = ["created", "voting_started", "voting_ended", "finished"] as const;
-export const SUPPORTED_CAMPAIGN_TYPES = ["random_select", "hungarian", "casino", "ttc"] as const;
+export const SUPPORTED_CAMPAIGN_TYPES = [
+	"random_select",
+	"hungarian",
+	"casino",
+	"ttc",
+	"poker",
+] as const;
 
 export const CAMPAIGN_TYPES_MESSAGES: Record<VotingCampaignType["options"]["type"], string> = {
 	casino: "Казино",
 	hungarian: "Венгерский алгоритм",
 	random_select: "Перемешанная выборка",
 	ttc: "Высший торговый цикл",
+	poker: "Покер (аналог ПИ)",
 };
 export const CAMPAIGN_STATUSES_MESSAGES: Record<VotingCampaignType["status"], string> = {
 	created: "Голосование создано",
@@ -55,6 +62,10 @@ export const Vote = z.discriminatedUnion("campaignType", [
 		topSeats: z.array(z.number()),
 	}),
 	z.object({
+		campaignType: z.literal("poker"),
+		distribution: z.record(z.number(), z.number()),
+	}),
+	z.object({
 		campaignType: z.literal("casino"),
 		distribution: z.record(z.number(), z.number()),
 		round: z.number(),
@@ -82,6 +93,13 @@ export const VotingTransactionInformation = z
 			pickAmount: z.number(),
 		}),
 		z.object({
+			campaignType: z.literal("poker"),
+			groupSize: z.number(),
+			chips: z.object({ max: z.number(), amount: z.number() }),
+			sharedDistribution: z.record(z.number(), z.array(z.number())),
+			personalDistribution: z.record(z.number(), z.number()).optional(),
+		}),
+		z.object({
 			campaignType: z.literal("casino"),
 			groupSize: z.number(),
 			rounds: z.object({ current: z.number(), total: z.number() }),
@@ -101,6 +119,7 @@ export const VotingTransactionInformation = z
 	.and(
 		z.object({
 			supposedOrder: SupposedOrder,
+			campaignStopsAt: z.coerce.date().nullable(),
 			exam: z.string(),
 		}),
 	);
@@ -115,6 +134,9 @@ export const VotingCampaignState = z.discriminatedUnion("type", [
 	}),
 	z.object({
 		type: z.literal("hungarian"),
+	}),
+	z.object({
+		type: z.literal("poker"),
 	}),
 	z.object({
 		type: z.literal("casino"),
@@ -132,32 +154,37 @@ export const VotingCampaignState = z.discriminatedUnion("type", [
 ]);
 export type VotingCampaignStateType = z.infer<typeof VotingCampaignState>;
 
-export const VotingCampaignOptions = z.discriminatedUnion("type", [
-	z.object({
-		type: z.literal("random_select"),
-	}),
-	z.object({
-		type: z.literal("hungarian"),
-		pickAmount: z.coerce
-			.number()
-			.optional()
-			.transform((n) => n ?? 3),
-	}),
-	z.object({
-		type: z.literal("casino"),
-		availablePoints: z.coerce
-			.number()
-			.optional()
-			.transform((n) => n ?? 10),
-		rounds: z.coerce
-			.number()
-			.optional()
-			.transform((n) => n ?? 3),
-	}),
-	z.object({
-		type: z.literal("ttc"),
-	}),
-]);
+export const VotingCampaignOptions = z
+	.discriminatedUnion("type", [
+		z.object({
+			type: z.literal("random_select"),
+		}),
+		z.object({
+			type: z.literal("hungarian"),
+			pickAmount: z.coerce
+				.number()
+				.optional()
+				.transform((n) => n ?? 3),
+		}),
+		z.object({
+			type: z.literal("poker"),
+		}),
+		z.object({
+			type: z.literal("casino"),
+			availablePoints: z.coerce
+				.number()
+				.optional()
+				.transform((n) => n ?? 10),
+			rounds: z.coerce
+				.number()
+				.optional()
+				.transform((n) => n ?? 3),
+		}),
+		z.object({
+			type: z.literal("ttc"),
+		}),
+	])
+	.and(z.object({ duration: z.string().optional() }));
 export type VotingCampaignOptionsType = z.infer<typeof VotingCampaignOptions>;
 
 export const Exam = z.object({

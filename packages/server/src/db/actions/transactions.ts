@@ -23,6 +23,8 @@ import {
 import { eq, and, inArray, count, sql } from "drizzle-orm";
 import { groups, students } from "../schema/users";
 import { sendCasinoIntermediateRoundMessage, updateRandomSelectCampaignStatusMessage } from "@/bot";
+import parseDuration from "parse-duration";
+import { POKER_CHIPS_MAX } from "./calculators/poker";
 
 export const cleanupStaleVotingTransactions = async () => {
 	await db.transaction(async (tx) => {
@@ -67,13 +69,14 @@ export const createVotingTransaction = async (
 			.where(and(eq(votes.student, payload.id), eq(votes.campaign, campaignId)))
 	)?.at(0);
 
-	const isValidCasinoVote =
+	const isValidReusableVote =
 		existingVote &&
 		existingVote.vote.campaignType !== "exemption" &&
-		campaign.state.type === "casino" &&
-		existingVote.vote.campaignType === "casino" &&
-		campaign.state.round !== existingVote.vote.round;
-	if (existingVote && !isValidCasinoVote) return { error: "alreadyVoted" };
+		((campaign.state.type === "casino" &&
+			existingVote.vote.campaignType === "casino" &&
+			campaign.state.round !== existingVote.vote.round) ||
+			(campaign.state.type === "poker" && existingVote.vote.campaignType === "poker"));
+	if (existingVote && !isValidReusableVote) return { error: "alreadyVoted" };
 
 	const existingTransaction = (
 		await db
@@ -121,6 +124,19 @@ export const getTransactionInformation = async (id: string) =>
 			).map((gs) => gs.students);
 			if (!students) return { error: "invalidGroupID" };
 
+			let campaignStopsAt: string | null = null;
+			if (campaign.options.duration) {
+				const parsedDuration = parseDuration(campaign.options.duration);
+				if (parsedDuration)
+					campaignStopsAt = new Date(campaign.started!.getTime() + parsedDuration).toISOString();
+			}
+
+			const sharedTransactionInfo = {
+				exam: campaign.exam,
+				supposedOrder,
+				campaignStopsAt,
+			};
+
 			switch (campaign.options.type) {
 				case "random_select": {
 					const { statusMessage: _, ...state } = campaign.state as Extract<
@@ -133,21 +149,54 @@ export const getTransactionInformation = async (id: string) =>
 
 					return ok({
 						...state,
+						...sharedTransactionInfo,
 						campaignType: "random_select",
 						group: Object.fromEntries(groupStudents.map((gs) => [gs.id, gs.fullName])),
-						supposedOrder,
 						takenSeats,
-						exam: campaign.exam,
 					});
 				}
 				case "hungarian":
 					return ok({
+						...sharedTransactionInfo,
 						campaignType: "hungarian",
 						pickAmount: campaign.options.pickAmount,
 						groupSize: groupStudents.length,
-						supposedOrder,
-						exam: campaign.exam,
 					});
+				case "poker": {
+					if (campaign.options.type !== "poker" || campaign.state.type !== "poker")
+						return { error: "internal", details: "corrupted campaign options/state" };
+
+					const campaignVotes = (
+						await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
+					).filter((v) => v.vote.campaignType === "poker");
+					console.log(campaignVotes);
+
+					let sharedDistribution: Record<number, number[]> = {};
+					let personalDistribution: Record<number, number> = {};
+
+					for (const { vote, student } of campaignVotes) {
+						if (vote.campaignType !== "poker") continue;
+						if (student === transaction.student) personalDistribution = vote.distribution;
+						else {
+							for (const [seat, chip] of Object.entries(vote.distribution)) {
+								if (!(Number(seat) in sharedDistribution)) sharedDistribution[Number(seat)] = [];
+								sharedDistribution[Number(seat)].push(chip);
+							}
+						}
+					}
+
+					return ok({
+						...sharedTransactionInfo,
+						campaignType: "poker",
+						chips: {
+							max: POKER_CHIPS_MAX,
+							amount: Math.ceil(groupStudents.length / POKER_CHIPS_MAX),
+						},
+						groupSize: groupStudents.length,
+						sharedDistribution,
+						personalDistribution,
+					});
+				}
 				case "casino": {
 					if (campaign.options.type !== "casino" || campaign.state.type !== "casino")
 						return { error: "internal", details: "corrupted campaign options/state" };
@@ -168,14 +217,13 @@ export const getTransactionInformation = async (id: string) =>
 					)?.vote.distribution;
 
 					return ok({
+						...sharedTransactionInfo,
 						campaignType: "casino",
 						availablePoints: campaign.options.availablePoints,
 						groupSize: groupStudents.length,
-						supposedOrder,
 						rounds: { current: campaign.state.round, total: campaign.options.rounds },
 						personalDistribution,
 						sharedDistribution: campaign.state.previousRoundDistribution,
-						exam: campaign.exam,
 					});
 				}
 				case "ttc": {
@@ -261,6 +309,31 @@ export const castVote = async (id: string, req: z.infer<typeof CastVoteRequest>)
 					return { error: "violatedConditions", details: "invalid seat numbers" };
 
 				if (totalVotes + 1 === students.length) extra.stopCampaign = campaign.id;
+				break;
+			}
+			case "poker": {
+				if (req.campaignType === "exemption") break;
+				if (req.campaignType !== "poker")
+					return { error: "violatedConditions", details: "invalid campaign type from voter" };
+
+				if (Object.values(req.distribution).some((v) => v < 0 || v > POKER_CHIPS_MAX))
+					return {
+						error: "violatedConditions",
+						details: "some points in the distribution go outside the allowed range",
+					};
+
+				if (Object.keys(req.distribution).some((v) => Number(v) < 1 || Number(v) > students.length))
+					return {
+						error: "violatedConditions",
+						details: "some seats in the distribution go outside the allowed range",
+					};
+
+				const grouped = Object.entries(Object.groupBy(Object.values(req.distribution), (i) => i));
+				if (grouped.some((g) => g[1]!.length > Math.ceil(students.length / POKER_CHIPS_MAX)))
+					return {
+						error: "violatedConditions",
+						details: "some chips in the distribution were used more than allowed",
+					};
 				break;
 			}
 			case "casino": {

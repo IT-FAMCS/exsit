@@ -1,5 +1,6 @@
 import CasinoAlgorithmChooser from "@/components/voting/CasinoAlgorithmChooser";
 import HungarianAlgorithmChooser from "@/components/voting/HungarianAlgorithmChooser";
+import PokerAlgorithmChooser from "@/components/voting/poker/PokerAlgorithmChooser";
 import RandomSelectAlgorithmChooser from "@/components/voting/RandomSelectAlgorithmChooser";
 import { LoadingWall } from "@/components/Walls";
 import { defaultHandler, expandedFetch } from "@/utils/fetch";
@@ -12,7 +13,7 @@ import {
 } from "@exsit/shared/types/exams";
 import { toast } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 
 export default function VoteRoute() {
@@ -110,6 +111,22 @@ export default function VoteRoute() {
 		setVote(undefined);
 	}, [location]);
 
+	const chooser = useMemo(() => {
+		if (!transactionInfo) return null;
+		switch (transactionInfo.campaignType) {
+			case "random_select":
+				return <RandomSelectAlgorithmChooser info={transactionInfo} onCast={setVote} />;
+			case "hungarian":
+				return <HungarianAlgorithmChooser info={transactionInfo} onCast={setVote} />;
+			case "poker":
+				return <PokerAlgorithmChooser info={transactionInfo} onCast={setVote} />;
+			case "casino":
+				return <CasinoAlgorithmChooser info={transactionInfo} onCast={setVote} />;
+			case "ttc":
+				return <p>TODO</p>;
+		}
+	}, [transactionInfo]);
+
 	if (requestVotingTransactionFetch.isFetching)
 		return <LoadingWall text="Отправляю запрос на голосование" />;
 
@@ -121,15 +138,7 @@ export default function VoteRoute() {
 	return (
 		!vote && (
 			<div className="relative flex min-h-dvh w-dvw flex-col items-center justify-center gap-2 p-4">
-				{transactionInfo?.campaignType === "hungarian" && (
-					<HungarianAlgorithmChooser info={transactionInfo} onCast={setVote} />
-				)}
-				{transactionInfo?.campaignType === "random_select" && (
-					<RandomSelectAlgorithmChooser info={transactionInfo} onCast={setVote} />
-				)}
-				{transactionInfo?.campaignType === "casino" && (
-					<CasinoAlgorithmChooser info={transactionInfo} onCast={setVote} />
-				)}
+				{chooser}
 				<p className="text-muted pointer-events-none absolute right-4 bottom-4 opacity-25">
 					{transactionToken}
 				</p>

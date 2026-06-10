@@ -6,7 +6,7 @@ import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { except } from "hono/combine";
 import { jwt } from "hono/jwt";
-import cron from "node-cron";
+import schedule from "node-schedule";
 
 import { adminRouter } from "./routers/admins";
 import { groupRouter } from "./routers/groups";
@@ -61,8 +61,8 @@ app
 	.route("/campaigns", campaignsRouter)
 	.route("/voting", votingRouter);
 
-cron.schedule("0 * * * *", cleanupStaleVotingTransactions);
-cron.schedule("* 0 * * *", setBotProfilePicture);
+schedule.scheduleJob("0 * * * *", cleanupStaleVotingTransactions);
+schedule.scheduleJob("0 0 * * *", setBotProfilePicture);
 
 startBot();
 process.once("SIGINT", async () => {
