@@ -169,7 +169,6 @@ export const getTransactionInformation = async (id: string) =>
 					const campaignVotes = (
 						await tx.select().from(votes).where(eq(votes.campaign, campaign.id))
 					).filter((v) => v.vote.campaignType === "poker");
-					console.log(campaignVotes);
 
 					let sharedDistribution: Record<number, number[]> = {};
 					let personalDistribution: Record<number, number> = {};

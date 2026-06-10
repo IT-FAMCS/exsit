@@ -7,6 +7,8 @@ import {
 	MeResponse,
 	ChangePasswordResponse,
 	ChangePasswordRequest,
+	AdminResetPasswordRequest,
+	AdminResetPasswordResponse,
 } from "@exsit/shared/types/auth";
 import { admins, students } from "../schema/users";
 import { eq } from "drizzle-orm";
@@ -119,7 +121,19 @@ export const changeUserPassword = async (
 	return ok(null);
 };
 
-export const getAuthInfo = async (payload: ExsitJwtPayload): Promise<z.infer<typeof MeResponse>> => {
+export const resetStudentPassword = async (
+	req: z.infer<typeof AdminResetPasswordRequest>,
+): Promise<z.infer<typeof AdminResetPasswordResponse>> => {
+	await db
+		.update(students)
+		.set({ passwordHash: await argon2.hash(req.password) })
+		.where(eq(students.id, req.student));
+	return ok(null);
+};
+
+export const getAuthInfo = async (
+	payload: ExsitJwtPayload,
+): Promise<z.infer<typeof MeResponse>> => {
 	switch (payload.role) {
 		case "admin": {
 			const admin = await getAdminById(payload.id);

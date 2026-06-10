@@ -84,7 +84,7 @@ export default function PokerAlgorithmChooser(props: {
 									<div {...tagProps}></div>
 									{num in props.info.sharedDistribution && (
 										<Badge placement="top-right" color="accent" size="sm">
-											{props.info.sharedDistribution[num].length}
+											{props.info.sharedDistribution[num].reduce((acc, cur) => acc + cur, 0)}
 										</Badge>
 									)}
 									{num in personalDistribution && (
