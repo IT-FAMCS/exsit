@@ -66,7 +66,7 @@ export function PokerChipSideways(props: { value: number; className?: string; cu
 export function PokerTable(props: { seat: number; othersChips: number[]; personalChip?: number }) {
 	const RADIUS_PERCENTAGE = 35;
 	return (
-		<div className="flex flex-col gap-2">
+		<div className="flex flex-col items-center justify-center gap-2">
 			<div className="bg-accent-soft @container relative flex aspect-square size-[65dvmin] items-center justify-center overflow-clip rounded-full">
 				<AnimatePresence>
 					{props.othersChips.map((v, idx) => {
@@ -75,7 +75,7 @@ export function PokerTable(props: { seat: number; othersChips: number[]; persona
 							<AnimatedPokerChip
 								value={v}
 								key={`${props.seat}-${idx}`}
-								className="absolute size-[15dvmin] -translate-x-1/2 -translate-y-1/2"
+								className="absolute size-[12.5dvmin] -translate-x-1/2 -translate-y-1/2"
 								style={{
 									left: `${50 + RADIUS_PERCENTAGE * Math.cos(angle)}%`,
 									top: `${50 + RADIUS_PERCENTAGE * Math.sin(angle)}%`,
