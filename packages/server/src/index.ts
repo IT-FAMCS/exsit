@@ -15,6 +15,7 @@ import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
 import { setBotProfilePicture, startBot, stopBot } from "./bot";
+import { rescheduleCampaignsWithDurations } from "./db/actions/campaigns";
 
 const app = new Hono()
 	.use(logger())
@@ -61,6 +62,7 @@ app
 	.route("/voting", votingRouter);
 
 schedule.scheduleJob("0 0 * * *", setBotProfilePicture);
+rescheduleCampaignsWithDurations();
 
 startBot();
 process.once("SIGINT", async () => {

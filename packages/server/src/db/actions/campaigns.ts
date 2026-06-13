@@ -230,3 +230,18 @@ export const getVotingCampaignVotes = async (
 		})),
 	);
 };
+
+export const rescheduleCampaignsWithDurations = async () => {
+	const campaigns = await db.select().from(votingCampaigns);
+	for (const campaign of campaigns) {
+		if (!campaign.options.duration || !campaign.started) continue;
+		const parsedDuration = parseDuration(campaign.options.duration);
+		if (parsedDuration) {
+			const date = new Date(campaign.started.getTime() + parsedDuration);
+			if (date.getTime() < Date.now()) continue;
+
+			schedule.scheduleJob(date, () => stopVotingCampaign(campaign.id));
+			console.log(`rescheduled campaign ${campaign.id} for ${date}`);
+		}
+	}
+};
