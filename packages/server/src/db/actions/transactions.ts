@@ -10,7 +10,7 @@ import {
 	VotingCampaignStateType,
 	VotingTransactionInformation,
 } from "@exsit/shared/types/exams";
-import { decodeTime, ulid } from "ulid";
+import { ulid } from "ulid";
 import { db } from "../connection";
 import { exams, votes, votingCampaigns, votingTransactions } from "../schema/exams";
 import { ok } from "@exsit/shared/types/api";
@@ -20,27 +20,11 @@ import {
 	getVotingCampaignStatistics,
 	stopVotingCampaign,
 } from "./campaigns";
-import { eq, and, inArray, count, sql } from "drizzle-orm";
+import { eq, and, count, sql } from "drizzle-orm";
 import { groups, students } from "../schema/users";
 import { sendCasinoIntermediateRoundMessage, updateRandomSelectCampaignStatusMessage } from "@/bot";
 import parseDuration from "parse-duration";
 import { POKER_CHIPS_MAX } from "./calculators/poker";
-
-export const cleanupStaleVotingTransactions = async () => {
-	await db.transaction(async (tx) => {
-		const transactions = await tx.select().from(votingTransactions);
-		const staleTransactions = transactions.filter(
-			(t) => Date.now() - decodeTime(t.id.slice(3)) >= 60 * 60 * 1000,
-		);
-		await tx.delete(votingTransactions).where(
-			inArray(
-				votingTransactions.id,
-				staleTransactions.map((st) => st.id),
-			),
-		);
-		console.log(`cleaned ${staleTransactions.length} stale voting transaction(s)`);
-	});
-};
 
 export const removeVotingTransaction = async (id: string) =>
 	await db.delete(votingTransactions).where(eq(votingTransactions.id, id));

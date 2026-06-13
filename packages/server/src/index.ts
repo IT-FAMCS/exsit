@@ -14,7 +14,6 @@ import { examRouter } from "./routers/exams";
 import { fileRouter } from "./routers/files";
 import { campaignsRouter } from "./routers/campaigns";
 import { votingRouter } from "./routers/voting";
-import { cleanupStaleVotingTransactions } from "./db/actions/transactions";
 import { setBotProfilePicture, startBot, stopBot } from "./bot";
 
 const app = new Hono()
@@ -61,7 +60,6 @@ app
 	.route("/campaigns", campaignsRouter)
 	.route("/voting", votingRouter);
 
-schedule.scheduleJob("0 * * * *", cleanupStaleVotingTransactions);
 schedule.scheduleJob("0 0 * * *", setBotProfilePicture);
 
 startBot();
