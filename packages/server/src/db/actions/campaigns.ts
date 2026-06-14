@@ -201,11 +201,12 @@ export const calculateVotingCampaignResults = async (
 		votes: mappedVotes,
 	});
 	if (result.error === null) {
+		const { hooks: _, ...filteredResult } = result.data;
 		await db
 			.update(votingCampaigns)
-			.set({ status: "finished", result: result.data })
+			.set({ status: "finished", result: filteredResult })
 			.where(eq(votingCampaigns.id, campaignId));
-		await sendVotingCampaignResultsMessage({ ...campaign, result: result.data });
+		await sendVotingCampaignResultsMessage(campaign, result.data);
 	}
 	return result;
 };

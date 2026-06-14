@@ -36,7 +36,7 @@ const fillMissingVotes = (
 	};
 
 	const notes: string[] = [];
-	const result = meta.votes;
+	const result = { ...meta.votes };
 	const missing = meta.group.filter((g) => !(g.id in meta.votes));
 	const partiallyFilled = meta.group.filter((g) => {
 		const vote = meta.votes[g.id];
@@ -98,11 +98,34 @@ export const calculatePokerResults: VotingCampaignCalculator = async (meta) => {
 		if (!order[i]) continue;
 		const vote = votes.find((v) => v[0] === order[i])?.[1];
 		if (!vote || vote.campaignType !== "poker") continue;
-		if ((vote.distribution[i + 1] ?? 1) < 5) unsatisfied++;
+		if (vote.distribution[i + 1]! < 5) unsatisfied++;
 	}
 	notes.push(
 		`количество студентов, которые получили места с оценкой желания 4 и ниже: ${unsatisfied}`,
 	);
 
-	return ok({ order, exemptions, notes });
+	return ok({
+		order: order.filter((o) => o),
+		exemptions,
+		notes,
+		hooks: {
+			studentSuffix: (student) => {
+				const index = order.indexOf(student);
+
+				const finalVote = votes.find((v) => v[0] === student)?.[1];
+				if (index === -1) return undefined;
+				if (!finalVote || finalVote.campaignType !== "poker") return undefined;
+				const originalVote = meta.votes[student];
+
+				const punished =
+					index + 1 in finalVote.distribution &&
+					!(
+						originalVote &&
+						originalVote.campaignType === "poker" &&
+						index + 1 in originalVote.distribution
+					);
+				return `(${finalVote.distribution[index + 1]}${punished ? ", пенальти" : ""})`;
+			},
+		},
+	});
 };

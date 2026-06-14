@@ -230,6 +230,11 @@ export const VotingCampaignResults = z.object({
 	notes: z.array(z.string()).default([]),
 	order: z.array(z.string()),
 	exemptions: z.array(z.string()),
+	hooks: z
+		.object({
+			studentSuffix: z.function({ input: [z.string()], output: z.string().optional() }).optional(),
+		})
+		.optional(),
 });
 export type VotingCampaignResultsType = z.infer<typeof VotingCampaignResults>;
 

@@ -2,7 +2,11 @@ import { Bot, InputFile } from "grammy";
 import { votingCampaigns } from "./db/schema/exams";
 import { getExamById } from "./db/actions/exams";
 import { getGroupById, getGroupIdByExam, getGroupStudents } from "./db/actions/groups";
-import { CAMPAIGN_TYPES_MESSAGES, VotingCampaignStateType } from "@exsit/shared/types/exams";
+import {
+	CAMPAIGN_TYPES_MESSAGES,
+	VotingCampaignResultsType,
+	VotingCampaignStateType,
+} from "@exsit/shared/types/exams";
 import { NotifyGroupRequest, NotifyGroupResponse } from "@exsit/shared/types/admin";
 import z from "zod";
 import { ok } from "@exsit/shared/types/api";
@@ -113,24 +117,27 @@ export const sendVotingCampaignStoppedMessage = async (
 
 export const sendVotingCampaignResultsMessage = async (
 	campaign: (typeof votingCampaigns)["$inferSelect"],
+	result: VotingCampaignResultsType,
 ) => {
 	const exam = await getExamById(campaign.exam);
 	const group = await getGroupById((await getGroupIdByExam(campaign.exam)) ?? "");
 	const students = await getGroupStudents(group?.id ?? "");
-	if (!bot || !exam || !group || !students || !group.notificationChannel || !campaign.result)
-		return;
+	if (!bot || !exam || !group || !students || !group.notificationChannel || !result) return;
 
 	let contents = `<b>${exam.subject} / ${CAMPAIGN_TYPES_MESSAGES[campaign.options.type]}</b>\n\n`;
-	for (let idx = 0; idx < campaign.result.order.length; idx++)
-		contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.order[idx])?.fullName}\n`;
+	for (let idx = 0; idx < result.order.length; idx++) {
+		const student = students.find((s) => s.id === result!.order[idx])?.fullName;
+		const suffix = result.hooks?.studentSuffix?.(result.order[idx]);
+		contents += `${idx + 1}. ${student ?? "свободно 🙂"}${suffix ? ` ${suffix}` : ""}\n`;
+	}
 
 	contents += "\n<b>Автоматы:</b>\n";
-	if (campaign.result.exemptions.length !== 0)
-		for (let idx = 0; idx < campaign.result.exemptions.length; idx++)
-			contents += `${idx + 1}. ${students.find((s) => s.id === campaign.result!.exemptions[idx])?.fullName}\n`;
+	if (result.exemptions.length !== 0)
+		for (let idx = 0; idx < result.exemptions.length; idx++)
+			contents += `${idx + 1}. ${students.find((s) => s.id === result!.exemptions[idx])?.fullName}\n`;
 	else contents += "отсутствуют\n";
 
-	contents += `\n${campaign.result.notes.map((n) => `💭 ${n}`).join("\n")}${campaign.result.notes.length !== 0 ? "\n" : ""}`;
+	contents += `\n${result.notes.map((n) => `💭 ${n}`).join("\n")}${result.notes.length !== 0 ? "\n" : ""}`;
 
 	contents += `\n<tg-spoiler>${group.publicCode}</tg-spoiler>`;
 	await bot.api.sendMessage(group.notificationChannel, contents, { parse_mode: "HTML" });
