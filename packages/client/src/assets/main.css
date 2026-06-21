@@ -18,7 +18,7 @@
 }
 
 .pressable-card {
-    @apply isolate outline-none;
+    @apply isolate outline-none focus-visible:ring-accent focus:outline-none focus-visible:ring-2;
 
     transition:
         transform 250ms var(--ease-out-quart),

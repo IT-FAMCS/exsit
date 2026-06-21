@@ -16,43 +16,45 @@ import { Pressable } from "react-aria-components";
 function ExamCard(props: { id: string; exam: ExamType }) {
 	const navigate = useNavigate();
 	const daysUntilExam = props.exam.date
-		? Math.floor((props.exam.date.getTime() - Date.now()) / 86400000)
+		? Math.ceil((props.exam.date.getTime() - Date.now()) / 86400000)
 		: -1;
 	const formatted = new Intl.DurationFormat("ru-RU", { style: "long" }).format({
 		days: daysUntilExam,
 	});
 
 	return (
-		<Pressable onPress={() => navigate(`/exam/${props.id}`)}>
-			<Card className="pressable-card w-full" role="button">
-				<Card.Header className="flex flex-row items-center gap-2">
-					<Card.Title className="flex items-center justify-center gap-2 text-start text-lg">
-						<Icon width={32} icon="mdi:emoticon-cry-outline" className="min-w-8" />{" "}
-						<p className="grow text-start text-lg leading-none">{props.exam.subject}</p>
-					</Card.Title>
-				</Card.Header>
-				<Card.Content className="text-muted flex w-full flex-row gap-2 px-4">
-					<div className="flex flex-col items-start justify-start gap-2">
-						<div className="flex flex-row gap-1">
-							<Icon icon="mdi:calendar" width={24} />
-							<p>
-								{props.exam.date
-									? `${props.exam.date.toLocaleDateString("ru-RU")} (${formatted})`
-									: "Неизвестно"}
-							</p>
+		daysUntilExam >= 0 && (
+			<Pressable onPress={() => navigate(`/exam/${props.id}`)}>
+				<Card className="pressable-card w-full" role="button">
+					<Card.Header className="flex flex-row items-center gap-2">
+						<Card.Title className="flex items-center justify-center gap-2 text-start text-lg">
+							<Icon width={32} icon="mdi:emoticon-cry-outline" className="min-w-8" />{" "}
+							<p className="grow text-start text-lg leading-none">{props.exam.subject}</p>
+						</Card.Title>
+					</Card.Header>
+					<Card.Content className="text-muted flex w-full flex-row gap-2 px-4">
+						<div className="flex flex-col items-start justify-start gap-2">
+							<div className="flex flex-row gap-1">
+								<Icon icon="mdi:calendar" width={24} />
+								<p>
+									{props.exam.date
+										? `${props.exam.date.toLocaleDateString("ru-RU")} (${daysUntilExam === 0 ? "ни пуха ни пера!" : formatted})`
+										: "Неизвестно"}
+								</p>
+							</div>
+							<div className="flex flex-row gap-1">
+								<Icon icon="mdi:map-marker-radius" width={24} />
+								<p>{props.exam.class ?? "Неизвестно"}</p>
+							</div>
+							<div className="flex flex-row gap-1">
+								<Icon icon="mdi:account" width={24} className="min-w-6" />
+								<p className="text-start wrap-break-word">{props.exam.teacher}</p>
+							</div>
 						</div>
-						<div className="flex flex-row gap-1">
-							<Icon icon="mdi:map-marker-radius" width={24} />
-							<p>{props.exam.class ?? "Неизвестно"}</p>
-						</div>
-						<div className="flex flex-row gap-1">
-							<Icon icon="mdi:account" width={24} className="min-w-6" />
-							<p className="text-start wrap-break-word">{props.exam.teacher}</p>
-						</div>
-					</div>
-				</Card.Content>
-			</Card>
-		</Pressable>
+					</Card.Content>
+				</Card>
+			</Pressable>
+		)
 	);
 }
 
@@ -116,7 +118,7 @@ export default function MainRoute() {
 						</Tabs.List>
 					</Tabs.ListContainer>
 					<Tabs.Panel className="pt-4" id="exams">
-						<ScrollShadow className="max-h-[40dvh]">
+						<ScrollShadow className="max-h-[40dvh] p-2">
 							<div className="flex flex-col gap-2">
 								{exams &&
 									Object.entries(exams).map((kv) => (

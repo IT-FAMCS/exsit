@@ -15,7 +15,7 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 	options: {
 		onSuccess?: (data: SchemaDataType<TOut>) => void;
 		onApiError?: (code: SchemaErrorsType<TOut>) => void;
-		onFetchError?: (type: "fetch" | "malformed_response") => void;
+		onFetchError?: (type: "fetch" | "malformed_response" | "unauthorized") => void;
 		showToast?: boolean;
 		errorMessages?: Record<
 			Exclude<SchemaErrorsType<TOut>, "validation" | "internal" | "__no_custom_errors__">,
@@ -36,6 +36,11 @@ export const defaultHandler = <TOut extends AnyAPIResponseSchema>(
 					description: `${result.exception}`,
 				});
 			options.onFetchError?.("fetch");
+			return;
+		case "unauthorized":
+			if (options.showToast ?? true)
+				toast.danger("Истёк срок действия сессии", { description: "Пожалуйста, войди заново." });
+			options.onFetchError?.("unauthorized");
 			return;
 		case "malformed_response":
 			if (options.showToast ?? true)
@@ -71,6 +76,7 @@ export type ExpandedFetchResult<TOut extends AnyAPIResponseSchema> = {
 	| { ok: true; data: SchemaDataType<TOut> }
 	| { ok: false; error: "api"; code: SchemaErrorsType<TOut> }
 	| { ok: false; error: "fetch"; exception: unknown }
+	| { ok: false; error: "unauthorized" }
 	| { ok: false; error: "malformed_response"; parseErrors: z.ZodError<z.output<TOut>> }
 );
 
@@ -101,15 +107,16 @@ export const expandedFetch = async <TOut extends AnyAPIResponseSchema>(
 		? path + `?${new URLSearchParams(options.query as Record<string, string>).toString()}`
 		: path;
 
-	let json: Record<string, unknown> = {};
+	let text: string = "";
 	try {
 		const result = await fetch(route(finalPath), finalOptions);
-		json = await result.json();
+		text = await result.text();
+		if (text === "Unauthorized") return { ok: false, error: "unauthorized", meta };
 	} catch (exception) {
 		return { ok: false, error: "fetch", exception, meta };
 	}
 
-	const parseResult = await options.output.safeParseAsync(json);
+	const parseResult = await options.output.safeParseAsync(JSON.parse(text));
 	if (!parseResult.success)
 		return { ok: false, error: "malformed_response", parseErrors: parseResult.error, meta };
 	if (parseResult.data.error !== null)

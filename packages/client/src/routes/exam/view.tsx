@@ -50,7 +50,7 @@ function MaterialsContainer(props: { title: string; materials: PreparationMateri
 								</Card.Header>
 							</div>
 							<Link href={m.type === "file" ? route(`/files/${m.id}`) : m.link} target="_blank">
-								<Button isIconOnly>
+								<Button excludeFromTabOrder isIconOnly>
 									{m.type === "file" ? (
 										<Icon icon="mdi:download" />
 									) : (

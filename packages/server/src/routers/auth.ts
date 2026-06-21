@@ -47,7 +47,7 @@ export const authRouter = new Hono<{ Variables: JwtVariables }>()
 			);
 			setCookie(c, "exsitauth", token, {
 				httpOnly: true,
-				maxAge: 7 * 86400,
+				maxAge: 30 * 86400,
 				domain: process.env.HOSTNAME,
 				sameSite: "lax",
 				secure: true,
